@@ -128,3 +128,9 @@ node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs
 ```
 
 原52项状态检查、960组参礁射线对照及新增生物几何 / 实例 / 水雾检查通过。浏览器工具本轮仍报告禁用，实际画面、着色器编译与帧率未验收，不能将生成确认稿当作网页截图。具体实现和边界见 [LIFE-REVISION.md](LIFE-REVISION.md)。
+
+## v0.7 底色与虾体型修订
+
+[打开修订版生物近看](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=pigment-7&view=life)。海参改用明确深褐sRGB色板，去掉清漆高光并减少检视灯光叠加；虾改为连续躯干和叠覆甲壳，替换椭球腹节。生物近看可勾选“底色对照（去光照）”，仅对主画面的动物临时关闭光照与雾影响，右侧摄像流程不受影响。
+
+状态、几何、实例数量与底色回归检查通过。尚无实际浏览器画面和帧率验收，不能据此宣称已经达到确认图。改动与限制见 [PIGMENT-REVISION.md](PIGMENT-REVISION.md)。

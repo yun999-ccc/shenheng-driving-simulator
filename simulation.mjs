@@ -1,6 +1,6 @@
-import {updateDrive,stopDrive} from './propulsion.mjs?v=life-6';
-import {isReefOccluded,REEFS,reefPoint,clearReefFootprint} from './habitat.mjs?v=life-6';
-import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs?v=life-6';
+import {updateDrive,stopDrive} from './propulsion.mjs?v=pigment-7';
+import {isReefOccluded,REEFS,reefPoint,clearReefFootprint} from './habitat.mjs?v=pigment-7';
+import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs?v=pigment-7';
 export const LIMITS={x:10,z:7,waterDepth:2.5,minDepth:.3,maxDepth:1.9,maxSpeed:1.6};
 export const HOME={x:-6,z:4};
 export function seeded(seed=48271){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}

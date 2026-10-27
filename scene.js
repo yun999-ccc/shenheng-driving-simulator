@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import {THRUSTERS} from './propulsion.mjs?v=life-6';
-import {LIMITS,observationCenter} from './simulation.mjs?v=life-6';
-import {createPondEnvironment} from './environment.js?v=life-6';
-import {createCucumbers} from './animals.js?v=life-6';
-import {underwaterLook} from './water-look.mjs?v=life-6';
-import {createShrimp} from './shrimp.js?v=life-6';
-import {isReefOccluded,REEFS,BED_Y} from './habitat.mjs?v=life-6';
-import {createRobot,PARTS} from './robot.js?v=life-6';
-import {PROBE,cameraFrame,projectObservation,cameraAvailable} from './probe.mjs?v=life-6';
+import {THRUSTERS} from './propulsion.mjs?v=pigment-7';
+import {LIMITS,observationCenter} from './simulation.mjs?v=pigment-7';
+import {createPondEnvironment} from './environment.js?v=pigment-7';
+import {createCucumbers} from './animals.js?v=pigment-7';
+import {underwaterLook} from './water-look.mjs?v=pigment-7';
+import {createShrimp} from './shrimp.js?v=pigment-7';
+import {isReefOccluded,REEFS,BED_Y} from './habitat.mjs?v=pigment-7';
+import {createRobot,PARTS} from './robot.js?v=pigment-7';
+import {PROBE,cameraFrame,projectObservation,cameraAvailable} from './probe.mjs?v=pigment-7';
 
 export function setupScene(container,camCanvas,overlay,world,onPart){
  const scene=new THREE.Scene();scene.background=new THREE.Color('#b1bebd');scene.fog=new THREE.FogExp2('#b1bebd',.004);
@@ -21,9 +21,9 @@ export function setupScene(container,camCanvas,overlay,world,onPart){
  const cyl=(r,h,mat,parent,pos,part)=>mesh(new THREE.CylinderGeometry(r,r,h,20),mat,parent,pos,part);
  const environment=createPondEnvironment(scene,renderer),water=environment.water,shrimp=createShrimp(environment.underwater);
  const targetGroup=new THREE.Group();environment.underwater.add(targetGroup);const cucumbers=createCucumbers(targetGroup,world);
- const focusCucumber=world.find(o=>o.zone==='open'&&o.reefIndex===0)||world[0];let focusAnimal='cucumber';
+ const focusCucumber=world.find(o=>o.zone==='open'&&o.reefIndex===0)||world[0];let focusAnimal='cucumber',baseColourInspection=false;
  let focusShrimp=0;shrimp.population.forEach((o,i)=>{const best=shrimp.population[focusShrimp];if(Math.hypot(o.x-focusCucumber.x,o.z-focusCucumber.z)<Math.hypot(best.x-focusCucumber.x,best.z-focusCucumber.z))focusShrimp=i});
- const biologyLights=[new THREE.HemisphereLight('#c9debf','#5b6443',.65),new THREE.DirectionalLight('#e9e7bd',.45)];biologyLights[1].position.set(-4,6,2);biologyLights.forEach(l=>{l.visible=false;scene.add(l)});
+ const biologyLights=[new THREE.HemisphereLight('#e3e6df','#555247',.70),new THREE.DirectionalLight('#fff6e8',1.20)];biologyLights[1].position.set(-4,6,2);biologyLights.forEach(l=>{l.visible=false;scene.add(l)});
  const robot=createRobot(scene),boat=robot.boat;
  const serviceStand=new THREE.Group();scene.add(serviceStand);serviceStand.visible=false;
  mesh(new THREE.BoxGeometry(4,.08,4),material('#c6c9bd',.95),serviceStand,[0,-.69,0]);
@@ -55,11 +55,11 @@ export function setupScene(container,camCanvas,overlay,world,onPart){
   environment.prepare(camera,s,elapsed,boat);track.visible=true;routeLine.visible=true;
   const service=s.maintenance&&!['reef','life'].includes(view),inspection=view==='probe'||view==='thruster'||view==='reef'||view==='life'||service,mainFog=scene.fog,mainBg=scene.background;if(inspection){track.visible=false;routeLine.visible=false;environment.water.visible=false;environment.above.visible=false;environment.sky.visible=false;const look=underwaterLook(s.turbidity,true);scene.fog=new THREE.FogExp2(look.color,look.fog);scene.background=new THREE.Color(look.color)}
   if(service){environment.underwater.visible=false;serviceStand.visible=true;serviceStand.position.set(s.x,0,s.z);serviceStand.rotation.y=-s.heading;scene.background=new THREE.Color('#c2c9c2');scene.fog=null}
-  const life=view==='life';if(['reef','life'].includes(view))boat.visible=false;biologyLights.forEach(l=>l.visible=life);cucumbers.update(camera.position,life);shrimp.update(s.time,camera.position,life);robot.setInspection(view==='thruster',(view==='model'||service)&&container.clientWidth>520);if(inspection)hemi.intensity=1.45;renderer.render(scene,camera);hemi.intensity=1.15;robot.setInspection(false);biologyLights.forEach(l=>l.visible=false);boat.visible=true;serviceStand.visible=false;environment.underwater.visible=true;environment.water.visible=true;environment.above.visible=true;environment.sky.visible=true;scene.fog=mainFog;scene.background=mainBg;
+  const life=view==='life';cucumbers.setBaseColour(life&&baseColourInspection);shrimp.setBaseColour(life&&baseColourInspection);if(['reef','life'].includes(view))boat.visible=false;biologyLights.forEach(l=>l.visible=life);cucumbers.update(camera.position,life);shrimp.update(s.time,camera.position,life);robot.setInspection(view==='thruster',(view==='model'||service)&&container.clientWidth>520);if(life){hemi.visible=false;sun.visible=false}else if(inspection)hemi.intensity=1.25;renderer.render(scene,camera);hemi.visible=true;sun.visible=true;hemi.intensity=1.15;robot.setInspection(false);cucumbers.setBaseColour(false);shrimp.setBaseColour(false);biologyLights.forEach(l=>l.visible=false);boat.visible=true;serviceStand.visible=false;environment.underwater.visible=true;environment.water.visible=true;environment.above.visible=true;environment.sky.visible=true;scene.fog=mainFog;scene.background=mainBg;
   // The observation camera renders the same world from the physical pod location.
   const frame=cameraFrame(s);downCam.position.set(frame.origin.x,frame.origin.y,frame.origin.z);downCam.up.set(frame.up.x,frame.up.y,frame.up.z);downCam.lookAt(frame.origin.x+frame.forward.x,frame.origin.y+frame.forward.y,frame.origin.z+frame.forward.z);downCam.updateMatrixWorld();for(const light of observationLights){const side=light.userData.side;light.position.set(frame.origin.x+frame.right.x*side*s.lampSpacing/2,frame.origin.y,frame.origin.z+frame.right.z*side*s.lampSpacing/2);light.target.position.set(frame.origin.x+frame.forward.x*.8+frame.right.x*side*.06,frame.origin.y+frame.forward.y*.8,frame.origin.z+frame.forward.z*.8+frame.right.z*side*.06);}const oldBg=scene.background,oldFog=scene.fog;const look=underwaterLook(s.turbidity);scene.background=new THREE.Color(look.color);scene.fog=new THREE.FogExp2(look.color,look.fog);environment.above.visible=false;environment.sky.visible=false;boat.visible=true;water.visible=false;track.visible=false;routeLine.visible=false;
   cucumbers.update(downCam.position);shrimp.update(s.time,downCam.position);if(cameraAvailable(s))camRenderer.render(scene,downCam);else {camRenderer.setClearColor('#1b322a');camRenderer.clear()}scene.fog=oldFog;scene.background=oldBg;environment.above.visible=true;environment.sky.visible=true;boat.visible=true;water.visible=true;track.visible=true;routeLine.visible=true;
   camCanvas.style.filter='saturate(.94)';ctx.clearRect(0,0,overlay.width,overlay.height);ctx.strokeStyle='#d7f4bcaa';ctx.lineWidth=1;ctx.font='9px sans-serif';ctx.fillStyle='#e7fbd8';const marked=world.map(o=>({o,p:projectObservation(o,{...s,cameraAspect:downCam.aspect})})).filter(({p})=>p.inside).sort((a,b)=>a.p.distance-b.p.distance).slice(0,8);const labelsPlaced=[];for(const {o,p} of marked){if(!cameraAvailable(s)||!p.inside||isOccluded(o,s)||Math.abs(p.x)>.92||Math.abs(p.y)>.88||isReefOccluded(o,frame.origin,LIMITS.waterDepth+frame.origin.y))continue;const x=(p.x+1)*overlay.width/2,y=(1-p.y)*overlay.height/2,size=8+o.size*35;ctx.strokeRect(x-size,y-size/2,size*2,size);if(!labelsPlaced.some(q=>Math.abs(q.x-x)<60&&Math.abs(q.y-y)<16)){ctx.fillText(`模拟 ${String(o.id).padStart(3,'0')}`,x-size,y-size/2-4);labelsPlaced.push({x,y})}}
  };
- return{update,setView,setAnimalFocus:value=>{focusAnimal=value==='shrimp'?'shrimp':'cucumber';setView('life')},isOccluded,getOpticsPercent,setAuxiliary:value=>robot.setAuxiliary(value),getObservationAspect:()=>downCam.aspect,setShrimpVisible:value=>shrimp.setVisible(value),start:callback=>renderer.setAnimationLoop(callback),resetView:()=>setView(view),getInfo:()=>({drawCalls:renderer.info.render.calls,geometries:renderer.info.memory.geometries}),dispose(){renderer.setAnimationLoop(null);shrimp.dispose();cucumbers.dispose();environment.dispose();renderer.dispose();camRenderer.dispose()}};
+ return{update,setView,setBaseColourInspection:value=>baseColourInspection=value,setAnimalFocus:value=>{focusAnimal=value==='shrimp'?'shrimp':'cucumber';setView('life')},isOccluded,getOpticsPercent,setAuxiliary:value=>robot.setAuxiliary(value),getObservationAspect:()=>downCam.aspect,setShrimpVisible:value=>shrimp.setVisible(value),start:callback=>renderer.setAnimationLoop(callback),resetView:()=>setView(view),getInfo:()=>({drawCalls:renderer.info.render.calls,geometries:renderer.info.memory.geometries}),dispose(){renderer.setAnimationLoop(null);shrimp.dispose();cucumbers.dispose();environment.dispose();renderer.dispose();camRenderer.dispose()}};
 }
