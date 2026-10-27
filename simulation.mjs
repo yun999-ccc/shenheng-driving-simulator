@@ -1,9 +1,9 @@
-import {makeCycle,startMission,tickMission,cancelCycle,surveyRoute} from './mission.mjs?v=cycle-9';
-import {makeEnergy,tickEnergy,tickSwap,onboardPack,returnBudgetWh,logEnergy} from './energy.mjs?v=cycle-9';
-import {SAMPLE_HOME,BASE,atBase,isInSample,isNavigable,routeToBase,routeToSample} from './navigation.mjs?v=cycle-9';
-import {updateDrive,stopDrive} from './propulsion.mjs?v=cycle-9';
-import {isReefOccluded,REEFS,reefPoint,clearReefFootprint} from './habitat.mjs?v=cycle-9';
-import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs?v=cycle-9';
+import {makeCycle,startMission,tickMission,cancelCycle,surveyRoute} from './mission.mjs?v=fixes-10';
+import {makeEnergy,tickEnergy,tickSwap,onboardPack,returnBudgetWh,logEnergy,pauseSwap} from './energy.mjs?v=fixes-10';
+import {SAMPLE_HOME,BASE,atBase,isInSample,isNavigable,routeToBase,routeToSample} from './navigation.mjs?v=fixes-10';
+import {updateDrive,stopDrive} from './propulsion.mjs?v=fixes-10';
+import {isReefOccluded,REEFS,reefPoint,clearReefFootprint} from './habitat.mjs?v=fixes-10';
+import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded,holdProbe} from './probe.mjs?v=fixes-10';
 export const LIMITS={x:10,z:7,waterDepth:2.5,minDepth:.3,maxDepth:1.9,maxSpeed:1.6};
 export const HOME=SAMPLE_HOME;
 export function seeded(seed=48271){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
@@ -72,14 +72,16 @@ export function tick(s,dt,world,selfOccluded=isGuardOccluded){
 
 export function deployProbe(s){if(s.stopped||!s.liftPower)return;if(s.maintenance){s.notice='请先退出维护姿态。';return}setDepth(s,.8)}
 export function setLampSpacing(s,value){const n=Number(value);if(!s.stopped&&Number.isFinite(n))s.lampSpacing=clamp(n,.36,.60)}
-export function requestMaintenance(s){if(s.stopped||!s.energy.powerOn||s.energy.swapStage!=='idle'||!s.liftPower||s.maintenancePending)return;if(s.maintenance){s.maintenance=false;s.notice='已退出维护；探头仍保持离水锁止。';return}retractProbe(s);if(s.probeState==='stowed'&&s.latch==='locked'){s.maintenance=true;s.notice='干式维护示意：假定机器已吊上岸；禁止推进。'}else{s.maintenancePending=true;s.notice='先归正、回收、锁止，再展开维护。'}}
+export function requestMaintenance(s){if(s.stopped||s.energy.faults.leak||!s.energy.faults.link||!s.energy.powerOn||s.energy.swapStage!=='idle'||!s.liftPower||s.maintenancePending)return;if(s.maintenance){s.maintenance=false;s.notice='已退出维护；探头仍保持离水锁止。';return}retractProbe(s);if(s.probeState==='stowed'&&s.latch==='locked'){s.maintenance=true;s.notice='干式维护示意：假定机器已吊上岸；禁止推进。'}else{s.maintenancePending=true;s.notice='先归正、回收、锁止，再展开维护。'}}
 export function toggleLiftPower(s){if(!s.energy.powerOn||s.energy.swapStage!=='idle'||s.stopped||s.maintenance)return;s.liftPower=!s.liftPower;s.speed=0;stopDrive(s);s.mode='manual';s.route=[];s.recording=false;s.targetDepth=s.depth;clearInput(s);s.manualRecovery=false;s.maintenancePending=false;
  if(s.probeState!=='stowed')s.probeState=s.liftPower?(s.depth>=.3?'ready':'held'):'held';
  s.notice=s.liftPower?'卷扬供电恢复，需重新下达操作。':'卷扬失电演练：制动保持为模拟，可使用手摇回收；未验证实物防坠。';
 }
-export function handRecover(s){if(s.stopped||s.liftPower||s.maintenance)return;s.manualRecovery=true;s.probeState='recovering';s.latch='open';s.latchTimer=0;s.targetDepth=PROBE.stowDepth;s.targetTilt=0;s.notice='手摇回收流程模拟。仅卷扬失电，倾转仍按独立供电演示。'}
+export function handRecover(s){if(s.stopped||!s.energy.powerOn||s.energy.faults.leak||s.probeState==='stowed'||s.liftPower||s.maintenance)return;s.manualRecovery=true;s.probeState='recovering';s.latch='open';s.latchTimer=0;s.targetDepth=PROBE.stowDepth;s.targetTilt=0;s.notice='手摇回收流程模拟。仅卷扬失电，倾转仍按独立供电演示。'}
 
 export function departBase(s){if(!atBase(s)||!canDrive(s)||s.energy.returnRequired||onboardPack(s).wh<=returnBudgetWh(s)||s.energy.swapStage!=='idle')return false;s.route=routeToSample();s.routeIndex=0;s.mode='depart';clearInput(s);s.notice='保持离水锁止，沿通道驶入样区；到达后手动下放探头。';return true}
 
 export function startCycle(s){return startMission(s)}
 export {cancelCycle};
+
+export function suspend(s){if(s.stopped)return;cancelCycle(s,'页面离开前台');pauseSwap(s);holdProbe(s);s.speed=0;stopDrive(s);s.mode='manual';s.route=[];s.recording=false;clearInput(s);s.notice='页面离开前台，驾驶与机构动作已暂停；需重新下达指令。'}

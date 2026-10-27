@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {cucumberGeometry,cucumberFeetGeometry} from './animal-geometry.js?v=cycle-9';
+import {cucumberGeometry,cucumberFeetGeometry} from './animal-geometry.js?v=fixes-10';
 const skinTexture=()=>{const size=128,data=new Uint8Array(size*size*4);for(let y=0;y<size;y++)for(let x=0;x<size;x++){const n=Math.sin(x*127.1+y*311.7)*43758.5453,v=100+Math.floor((n-Math.floor(n))*70)+Math.round(Math.sin(x*.5+Math.sin(y*.4))*18),i=(y*size+x)*4;data[i]=data[i+1]=data[i+2]=v;data[i+3]=255}const t=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;return t};
 export function createCucumbers(parent,world){
  // Small artistic shadow lift preserves brown readability; not real bioluminescence.

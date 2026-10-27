@@ -1,0 +1,3 @@
+import {holdProbe} from './probe.mjs?v=fixes-10';
+export function pauseSwap(s){const e=s.energy;if(['opening','removing','inserting','closing'].includes(e.swapStage)){e.pausedSwap=e.swapStage;e.pausedSeconds=e.swapSeconds;e.swapStage='paused'}}
+export function cancelCycle(s,reason='手动接管'){const c=s.cycle;if(!c?.active)return;c.active=false;c.stage='interrupted';c.stageTime=0;c.actionTimer=0;c.reason=reason+'；需重新开始整条流程。';c.events.push({time:s.time,stage:'interrupted',note:c.reason});s.notice=c.reason;pauseSwap(s);s.recording=false;s.route=[];s.mode='manual';s.keys={};s.speed=0;s.drive={left:0,right:0};s.driveCommand={left:0,right:0};holdProbe(s)}

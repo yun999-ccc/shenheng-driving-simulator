@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {STATION} from './navigation.mjs?v=cycle-9';
+import {STATION} from './navigation.mjs?v=fixes-10';
 // Authored concept geometry, dimensions do not select a photovoltaic product.
 export function createStation(parent){
  const root=new THREE.Group();root.name='Shore solar and spare battery station';root.position.set(STATION.x,STATION.y,STATION.z);parent.add(root);
@@ -56,8 +56,8 @@ export function createStation(parent){
  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.4,.85),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false}));sign.position.set(0,2.05,-1.69);sign.rotation.y=Math.PI;root.add(sign);let signature='';
  const labels={charging:'充电',ready:'就绪',onboard:'装船',removed:'已取出',waiting:'等待充电'};
- function update(s){const e=s.energy,ids=Object.keys(e.packs).filter(id=>id!==e.onboard),key=JSON.stringify([e.onboard,ids.map(id=>[id,e.packs[id].status,Math.floor(e.packs[id].wh)]),Math.round(e.pvW)]);if(key===signature)return;signature=key;
-  trays.forEach((t,i)=>{const id=ids[i],p=e.packs[id];t.tray.visible=p.status!=='removed'&&!(e.pendingPack===id&&e.swapStage==='inserting');t.ledMat.color.set(p.status==='ready'?'#78ae75':'#d6ac55');t.ledMat.emissive.copy(t.ledMat.color).multiplyScalar(.25)});
+ function update(s){const e=s.energy,ids=Object.keys(e.packs).filter(id=>id!==e.onboard),key=JSON.stringify([e.onboard,e.swapStage,e.pausedSwap,e.pendingPack,ids.map(id=>[id,e.packs[id].status,Math.floor(e.packs[id].wh)]),Math.round(e.pvW)]);if(key===signature)return;signature=key;
+  trays.forEach((t,i)=>{const id=ids[i],p=e.packs[id];t.tray.visible=p.status!=='removed'&&!(e.pendingPack===id&&(e.swapStage==='inserting'||e.swapStage==='paused'&&e.pausedSwap==='inserting'));t.ledMat.color.set(p.status==='ready'?'#78ae75':'#d6ac55');t.ledMat.emissive.copy(t.ledMat.color).multiplyScalar(.25)});
   ctx.fillStyle='#244f43';ctx.fillRect(0,0,1024,256);ctx.fillStyle='#f1eee0';ctx.textAlign='center';ctx.font='bold 45px sans-serif';ctx.fillText('岸上太阳能 · 换电站',512,64);ctx.font='32px sans-serif';ctx.fillText(ids.map(id=>`${id}组 ${labels[e.packs[id].status]} ${Math.floor(e.packs[id].wh)}Wh`).join('  /  '),512,126);ctx.font='28px sans-serif';ctx.fillText(`船载 ${e.onboard}组 · 充电输入 ${Math.round(e.pvW)}W · 模拟用`,512,184);ctx.font='23px sans-serif';ctx.fillText('柜体为展示剖开状态 · 真实防水与电气规格待设计',512,228);texture.needsUpdate=true;
  }
  return{root,update};

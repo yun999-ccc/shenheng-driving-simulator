@@ -1,15 +1,15 @@
-import {CYCLE_STAGES,canStartCycle} from './mission.mjs?v=cycle-9';
-import {startCycle,cancelCycle} from './simulation.mjs?v=cycle-9';
-import {onboardPack,returnBudgetWh,swapAction,canSwap,fastCharge,setSun,setEnergyFault,batteryPercent,shorePower} from './energy.mjs?v=cycle-9';
-import {BASE,atBase,isInSample} from './navigation.mjs?v=cycle-9';
-import {departBase} from './simulation.mjs?v=cycle-9';
-import {stopDrive} from './propulsion.mjs?v=cycle-9';
-import {PROBE,obstacleBelow,cameraFrame,cameraAvailable,canDrive} from './probe.mjs?v=cycle-9';
-import {REEFS} from './habitat.mjs?v=cycle-9';
-import {SHRIMP_SCENARIO} from './stocking.mjs?v=cycle-9';
+import {CYCLE_STAGES,canStartCycle} from './mission.mjs?v=fixes-10';
+import {startCycle,cancelCycle} from './simulation.mjs?v=fixes-10';
+import {onboardPack,returnBudgetWh,swapAction,canSwap,fastCharge,setSun,setEnergyFault,batteryPercent,shorePower} from './energy.mjs?v=fixes-10';
+import {BASE,atBase,isInSample} from './navigation.mjs?v=fixes-10';
+import {departBase} from './simulation.mjs?v=fixes-10';
+import {stopDrive} from './propulsion.mjs?v=fixes-10';
+import {PROBE,obstacleBelow,cameraFrame,cameraAvailable,canDrive} from './probe.mjs?v=fixes-10';
+import {REEFS} from './habitat.mjs?v=fixes-10';
+import {SHRIMP_SCENARIO} from './stocking.mjs?v=fixes-10';
 import * as THREE from 'three';
-import {makeState,makeWorld,tick,capture,quality,beginSurvey,returnHome,manual,emergencyStop,releaseStop,setDepth,setTilt,retractProbe,clearInput,LIMITS,deployProbe,requestMaintenance,toggleLiftPower,handRecover,setLampSpacing} from './simulation.mjs?v=cycle-9';
-import {setupScene} from './scene.js?v=cycle-9';
+import {makeState,makeWorld,tick,capture,quality,beginSurvey,returnHome,manual,emergencyStop,releaseStop,setDepth,setTilt,retractProbe,clearInput,LIMITS,deployProbe,requestMaintenance,toggleLiftPower,handRecover,setLampSpacing,suspend} from './simulation.mjs?v=fixes-10';
+import {setupScene} from './scene.js?v=fixes-10';
 let state=makeState();const world=makeWorld();const $=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)];let activeView='follow';let toastTimer,view,scale=1,accumulator=0,lastUI=0;
 function toast(text){$('#toast').textContent=text;$('#toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.add('hidden'),3200)}
 function selectView(name){activeView=name;view.setView(name);all('[data-view]').forEach(b=>b.classList.toggle('selected',b.dataset.view===name));$('#part-detail').classList.add('hidden');$('#inspection-note').textContent=name==='station'?'岸上补能 · 模拟配置 · 切换视角不移动船位':name==='battery'?'电池成组更换 · 机构与供电流程模拟':name==='life'?'生物检视 · 合成模型 · 水面隐藏':name==='reef'?'参礁检视 · 合成场景 · 水面隐藏':name==='thruster'?'船尾检视 · 模拟用 · 水面隐藏 / 粒子为流向示意':'结构检视 · 模拟用 · 水面隐藏';$('#inspection-note').classList.toggle('hidden',!['probe','thruster','reef','life','station','battery'].includes(name))}
@@ -38,8 +38,8 @@ function updateUI(){
  const optics=view.getOpticsPercent(s);$('#camera-idle').classList.toggle('hidden',cameraAvailable(s));$('#optics-status').textContent=optics===null?'相机停用：离水、维护、断电或故障时停止观察与计数':optics===0?'45点未命中结构；边缘仍可能入镜':`结构遮挡采样命中约 ${optics}% · 45点`;
  $('#latch-state').textContent=({open:'已退出',releasing:'正在退出',engaging:'正在接合',paused:'中间位置 · 待复位',locked:'已接合 · 示意'})[s.latch];$('#brake-state').textContent=!s.liftPower&&!s.manualRecovery?'失电保持 · 示意':Math.abs(s.depth-s.targetDepth)>.01?'释放 / 卷扬':'保持示意';
  $('#pose-description').textContent=s.maintenance?'干式维护示意：假定机器已吊上岸；禁止推进。':s.probeState==='stowed'?'已离水收纳；下放滑杆仅设水下深度，请点击观测姿态。':s.probeState==='recovering'?'归正 → 离水回收 → 承托 → 锁销接合。':'观测状态；收纳时先归正、离水，再锁止。';
- $('#pose-service').textContent=s.maintenance?'退出维护':s.maintenancePending?'等待收纳':'维护姿态';$('#lift-power').textContent=s.liftPower?'卷扬失电演练':'恢复卷扬供电';$('#hand-recover').disabled=s.stopped||s.liftPower||s.manualRecovery||s.probeState==='stowed';$('#lift-power').disabled=s.stopped||!s.energy.powerOn||s.energy.swapStage!=='idle'||s.maintenance;
- for(const id of ['pose-work','pose-stow','pose-service'])$('#'+id).disabled=s.stopped||!s.liftPower||s.maintenancePending;$('#pose-work').disabled=s.stopped||!s.energy.powerOn||s.energy.returnRequired||!isInSample(s.x,s.z)||!s.energy.faults.link||s.energy.faults.leak||!s.liftPower||s.maintenance||s.probeState==='recovering';$('#pose-service').disabled||=!s.energy.powerOn||s.energy.swapStage!=='idle';$('#pose-stow').disabled=s.stopped||!s.energy.powerOn||s.energy.faults.leak||!s.liftPower||s.maintenance;
+ $('#pose-service').textContent=s.maintenance?'退出维护':s.maintenancePending?'等待收纳':'维护姿态';$('#lift-power').textContent=s.liftPower?'卷扬失电演练':'恢复卷扬供电';$('#hand-recover').disabled=s.stopped||!s.energy.powerOn||s.energy.faults.leak||s.liftPower||s.manualRecovery||s.probeState==='stowed';$('#lift-power').disabled=s.stopped||!s.energy.powerOn||s.energy.swapStage!=='idle'||s.maintenance;
+ for(const id of ['pose-work','pose-stow','pose-service'])$('#'+id).disabled=s.stopped||!s.liftPower||s.maintenancePending;$('#pose-work').disabled=s.stopped||!s.energy.powerOn||s.energy.returnRequired||!isInSample(s.x,s.z)||!s.energy.faults.link||s.energy.faults.leak||!s.liftPower||s.maintenance||s.probeState==='recovering';$('#pose-service').disabled||=!s.energy.powerOn||s.energy.faults.leak||!s.energy.faults.link||s.energy.swapStage!=='idle';$('#pose-stow').disabled=s.stopped||!s.energy.powerOn||s.energy.faults.leak||!s.liftPower||s.maintenance;
  all('[data-pose]').forEach(b=>{b.disabled=$('#pose-'+({work:'work',stow:'stow',service:'service'})[b.dataset.pose]).disabled;b.classList.toggle('selected',b.dataset.pose==='service'?s.maintenance:b.dataset.pose==='stow'?s.probeState==='stowed':s.probeState==='ready')});
  $('#lamp-spacing-value').textContent=s.lampSpacing.toFixed(2)+' m';$('#lamp-spacing').disabled=s.stopped;if(document.activeElement!==$('#lamp-spacing'))$('#lamp-spacing').value=s.lampSpacing;
  if(s.maintenance&&!['reef','life'].includes(activeView)||activeView==='model'&&(s.probeState==='stowed'||s.probeState==='recovering')){$('#inspection-note').classList.remove('hidden');$('#inspection-note').textContent=s.maintenance?'干式维护示意 · 假定吊上岸 · 未验证承载':'离水收纳与锁止 · 动作模拟 / 未验证承载'}
@@ -51,9 +51,9 @@ function loop(){timer.update();state.cameraAspect=view.getObservationAspect();co
 view.start(loop);
 const keys={w:'forward',s:'back',a:'left',d:'right',q:'up',e:'down',ArrowUp:'forward',ArrowDown:'back',ArrowLeft:'left',ArrowRight:'right'};
 function press(action){if(state.stopped)return;if(state.cycle.active)manual(state);if(!canDrive(state)&&['forward','back','left','right'].includes(action))return;if(['forward','back','left','right'].includes(action)&&state.mode!=='manual')manual(state);state.keys[action]=true;tick(state,1/60,world,view.isOccluded)}
-window.addEventListener('keydown',e=>{const tag=e.target.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(tag)||document.querySelector('dialog[open]'))return;if(e.code==='Space'){e.preventDefault();emergencyStop(state);updateUI();return}const key=keys[e.key]||keys[e.key.toLowerCase()];if(key){e.preventDefault();if(!e.repeat)press(key)}});
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();emergencyStop(state);updateUI();return}const tag=e.target.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(tag)||document.querySelector('dialog[open]'))return;const key=keys[e.key]||keys[e.key.toLowerCase()];if(key){e.preventDefault();if(!e.repeat)press(key)}});
 window.addEventListener('keyup',e=>{const key=keys[e.key]||keys[e.key.toLowerCase()];delete state.keys[key]});
-window.addEventListener('blur',()=>{clearInput(state);if(state.mode==='manual'){state.speed=0;stopDrive(state)}});document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelCycle(state,'页面离开前台');clearInput(state);state.speed=0;stopDrive(state);if(state.mode!=='manual'){state.mode='manual';state.route=[];state.recording=false;state.notice='页面离开前台，自动任务已暂停并清除。'}}});
+window.addEventListener('blur',()=>{clearInput(state);if(state.mode==='manual'){state.speed=0;stopDrive(state)}});document.addEventListener('visibilitychange',()=>{if(document.hidden){suspend(state);updateUI()}});
 all('[data-drive]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);press(b.dataset.drive);updateUI()});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>{delete state.keys[b.dataset.drive];updateUI()})});
 all('[data-pose]').forEach(b=>b.onclick=()=>$('#pose-'+b.dataset.pose).click());
 $('#lift-diagram').onclick=()=>{manual(state);state.speed=0;stopDrive(state);$('#mechanism-dialog').showModal()};$('#pose-work').onclick=()=>{deployProbe(state);selectView('probe');updateUI()};$('#pose-stow').onclick=()=>{retractProbe(state);selectView('model');updateUI()};$('#pose-service').onclick=()=>{requestMaintenance(state);selectView('model');updateUI()};$('#lift-power').onclick=()=>{toggleLiftPower(state);updateUI()};$('#hand-recover').onclick=()=>{handRecover(state);selectView('model');updateUI()};$('#lamp-spacing').oninput=e=>setLampSpacing(state,e.target.value);$('#show-auxiliary').onchange=e=>view.setAuxiliary(e.target.checked);
@@ -78,7 +78,7 @@ function updateEnergyUI(){const s=state,e=s.energy,c=e.config;
  $('#swap-state').textContent=e.swapStage==='idle'?(atBase(s)?'已在岸边停泊位':'请先返岸，再停机换电'):'换电流程 · '+swapLabels[e.swapStage];$('#energy-status').textContent=e.alarm||(!e.faults.link?'通信未恢复':e.returnRequired?'已触发低电返岸，完成换电后解除。':e.swapStage==='idle'?'返岸会先完成离水回收与锁止。换电后旧任务不会自动恢复。':'人工操作动画演示；船载电源保持断开。');
  $('#swap-next').textContent=swapLabels[e.swapStage];$('#swap-next').disabled=!canSwap(s)||['opening','removing','inserting','closing'].includes(e.swapStage);$('#energy-return').disabled=$('#return').disabled;$('#depart-base').disabled=s.stopped||!atBase(s)||!canDrive(s)||e.returnRequired||e.swapStage!=='idle'||onboardPack(s).wh<=returnBudgetWh(s);
  $('#charge-fast').disabled=s.stopped||e.powerOn||!canSwap(s)||!['idle','off','open','closed','checked'].includes(e.swapStage);$('#solar-sun').disabled=s.stopped;$('#solar-value').textContent=Math.round(e.sun*100)+'%';if(document.activeElement!==$('#solar-sun'))$('#solar-sun').value=e.sun*100;
- $('#link-fault').textContent=e.faults.link?'通信中断演练':'恢复通信';$('#leak-fault').textContent=e.faults.leak?'解除进水演练':'舱内进水演练';for(const id of ['low-energy','link-fault','leak-fault'])$('#'+id).disabled=s.stopped||e.swapStage!=='idle';
+ $('#link-fault').textContent=e.faults.link?'通信中断演练':'恢复通信';$('#leak-fault').textContent=e.faults.leak?'解除进水演练':'舱内进水演练';$('#low-energy').disabled=s.stopped||e.swapStage!=='idle';for(const id of ['link-fault','leak-fault'])$('#'+id).disabled=s.stopped;
  $('#station-return').disabled=$('#energy-return').disabled;$('#station-swap').disabled=$('#swap-next').disabled;$('#station-swap').textContent=swapLabels[e.swapStage];$('#station-berth-status').textContent=atBase(s)?'船已接近岸站停泊位 · 系泊仅为示意':s.mode==='return'||s.mode==='retract'?'正在回收或返岸；船位连续移动':'船还未返岸；切换视角只移动镜头';
  const step={off:0,opening:1,open:1,removing:2,removed:2,inserting:3,inserted:3,closing:4,closed:4,checked:5}[e.swapStage];all('.swap-steps li').forEach((o,i)=>o.classList.toggle('active',i===step));
 }

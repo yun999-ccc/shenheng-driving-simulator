@@ -1,0 +1,1 @@
+export function setupScene(){return{setView(){},getOpticsPercent:()=>0,getObservationAspect:()=>1.6,update(){},isOccluded:()=>false,start:f=>globalThis.uiFrame=f,setBaseColourInspection(){},setAnimalFocus(){},resetView(){},setAuxiliary(){},setShrimpVisible(){}}}

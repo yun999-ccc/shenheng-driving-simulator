@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
-import {THRUSTERS,jetPoint} from './propulsion.mjs?v=cycle-9';
-import {PROBE,telescopicSections,GUARD} from './probe.mjs?v=cycle-9';
+import {THRUSTERS,jetPoint} from './propulsion.mjs?v=fixes-10';
+import {PROBE,telescopicSections,GUARD} from './probe.mjs?v=fixes-10';
 
 export const PARTS={
  reef:['错层砖石参礁 · 合成结构','多块带缺角的砖石搭接，保留入口、接缝和部分封盖。表面附着与淤积只作视觉示意；形状、布局及海参分区均为合成，不是养殖设施施工图或真实存量。'],

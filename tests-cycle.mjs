@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {makeState,makeWorld,tick,startCycle,emergencyStop,releaseStop,manual} from './simulation.mjs?v=cycle-9';
-import {BASE,atBase,isNavigable} from './navigation.mjs?v=cycle-9';
-import {setEnergyFault,setSun,fastCharge} from './energy.mjs?v=cycle-9';
+import {makeState,makeWorld,tick,startCycle,emergencyStop,releaseStop,manual} from './simulation.mjs?v=fixes-10';
+import {BASE,atBase,isNavigable} from './navigation.mjs?v=fixes-10';
+import {setEnergyFault,setSun,fastCharge} from './energy.mjs?v=fixes-10';
 const world=makeWorld(),advance=(s,t)=>{for(let i=0;i<Math.ceil(t*20);i++)tick(s,.05,world)};
 const dock=()=>{const s=makeState();Object.assign(s,BASE,{probeState:'stowed',latch:'locked',depth:-.55,targetDepth:-.55});return s};
 test('one action runs checks, survey, actual return, swap, old-group charge and parked completion',()=>{const s=makeState();assert(startCycle(s));const origin={x:s.x,z:s.z};advance(s,.5);assert.equal(s.x,origin.x);assert.equal(s.z,origin.z);let samples=0,steps=new Set;for(let i=0;i<20000&&s.cycle.active;i++){tick(s,.05,world);steps.add(s.cycle.stage);assert(isNavigable(s.x,s.z));if(s.cycle.stage==='survey'&&s.recording)samples++;if(s.cycle.stage==='charging'&&!s.energy.powerOn)fastCharge(s)}assert.equal(s.cycle.stage,'complete');assert(atBase(s));assert.equal(s.probeState,'stowed');assert.equal(s.latch,'locked');assert(s.records.length>0&&samples>0);assert.equal(s.energy.onboard,'C');assert.equal(s.energy.packs.A.wh,800);assert.equal(s.speed,0);assert(steps.has('swapping')&&steps.has('charging'));assert(s.cycle.events.some(e=>e.stage==='precheck'));assert(s.cycle.events.some(e=>e.stage==='return'));assert(!s.recording)});

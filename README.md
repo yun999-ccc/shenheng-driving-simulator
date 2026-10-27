@@ -8,9 +8,9 @@
 
 预览为历史实际截图。v0.8新增岸站与换电，v0.9新增一键完整流程并调整海参底色，尚未取得新的浏览器截图。
 
-[直接查看岸上补能站](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=cycle-9&view=station) · [补能模型与参数边界](ENERGY-REVISION.md)
+[直接查看岸上补能站](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=fixes-10&view=station) · [补能模型与参数边界](ENERGY-REVISION.md)
 
-当前版：[一键巡检与补能](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=cycle-9) · [本次修改与验证边界](CYCLE-REVISION.md)
+当前版：[一键巡检与补能](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=fixes-10) · [v0.10检查与修复记录](BUGFIX-REVIEW.md) · [流程设计与边界](CYCLE-REVISION.md)
 
 ## 如何体验
 
@@ -33,10 +33,10 @@ python3 -m http.server 8080 --bind 127.0.0.1
 打开 http://127.0.0.1:8080/ 。不要直接双击 HTML 文件运行。Three.js 和表面纹理已随项目提供，运行时无需第三方 CDN、API 密钥或账号登录。
 
 ```sh
-node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs tests-bugfixes.mjs tests-ui.mjs tests-stress.mjs
 ```
 
-原状态模型包含52项检查，另有15项补能故障、10项完整流程与独立几何检查；覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。这些检查不是实机性能验证。
+原状态模型包含52项检查，另有15项补能故障、10项完整流程与独立几何检查；覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。v0.10另加入故障复现、DOM事件与组合操作检查；详细范围见BUGFIX-REVIEW.md。这些检查不是实机性能验证，也不替代实际浏览器验收。
 
 ## 文件结构
 
@@ -122,7 +122,7 @@ GitHub Pages 从 main 分支根目录发布，.nojekyll 关闭 Jekyll 处理。�
 渲染和合成遮挡使用同一批砖石三角面；探头保护读取同源砖块的保守外包络。88条海参分为礁外、洞口、礁内的合成测试位置，560尾虾仍保持固定模拟数量，运动避开礁体。具体完成范围及验证限制见 [REEF-REVISION.md](REEF-REVISION.md)。
 
 ```sh
-node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs tests-bugfixes.mjs tests-ui.mjs tests-stress.mjs
 node tests-reef-geometry.mjs
 ```
 

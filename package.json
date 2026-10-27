@@ -1,9 +1,9 @@
 {
   "name": "shenheng-driving-simulator",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs"
+    "test": "node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs tests-bugfixes.mjs tests-ui.mjs tests-stress.mjs"
   }
 }

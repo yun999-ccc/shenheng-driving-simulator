@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {makeState,makeWorld,tick,returnHome,departBase,deployProbe,emergencyStop,releaseStop,capture,beginSurvey} from './simulation.mjs?v=cycle-9';
-import {BASE,isNavigable} from './navigation.mjs?v=cycle-9';
-import {canDrive,cameraAvailable} from './probe.mjs?v=cycle-9';
-import {tickShore,tickEnergy,onboardPack,swapAction,canSwap,fastCharge,setSun,setEnergyFault,returnBudgetWh} from './energy.mjs?v=cycle-9';
+import {makeState,makeWorld,tick,returnHome,departBase,deployProbe,emergencyStop,releaseStop,capture,beginSurvey} from './simulation.mjs?v=fixes-10';
+import {BASE,isNavigable} from './navigation.mjs?v=fixes-10';
+import {canDrive,cameraAvailable} from './probe.mjs?v=fixes-10';
+import {tickShore,tickEnergy,onboardPack,swapAction,canSwap,fastCharge,setSun,setEnergyFault,returnBudgetWh} from './energy.mjs?v=fixes-10';
 const world=makeWorld(),advance=(s,t)=>{for(let i=0;i<Math.ceil(t*60);i++)tick(s,1/60,world)};
 const dock=()=>{const s=makeState();Object.assign(s,BASE,{depth:-.55,targetDepth:-.55,probeState:'stowed',latch:'locked'});return s};
 const finishSwap=s=>{for(let i=0;i<7;i++){assert(swapAction(s));advance(s,1.3)}};

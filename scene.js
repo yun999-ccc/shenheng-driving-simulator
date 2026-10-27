@@ -1,15 +1,15 @@
-import {createStation} from './station.js?v=cycle-9';
-import {STATION,BASE,atBase} from './navigation.mjs?v=cycle-9';
+import {createStation} from './station.js?v=fixes-10';
+import {STATION,BASE,atBase} from './navigation.mjs?v=fixes-10';
 import * as THREE from 'three';
-import {THRUSTERS} from './propulsion.mjs?v=cycle-9';
-import {LIMITS,observationCenter} from './simulation.mjs?v=cycle-9';
-import {createPondEnvironment} from './environment.js?v=cycle-9';
-import {createCucumbers} from './animals.js?v=cycle-9';
-import {underwaterLook} from './water-look.mjs?v=cycle-9';
-import {createShrimp} from './shrimp.js?v=cycle-9';
-import {isReefOccluded,REEFS,BED_Y} from './habitat.mjs?v=cycle-9';
-import {createRobot,PARTS} from './robot.js?v=cycle-9';
-import {PROBE,cameraFrame,projectObservation,cameraAvailable} from './probe.mjs?v=cycle-9';
+import {THRUSTERS} from './propulsion.mjs?v=fixes-10';
+import {LIMITS,observationCenter} from './simulation.mjs?v=fixes-10';
+import {createPondEnvironment} from './environment.js?v=fixes-10';
+import {createCucumbers} from './animals.js?v=fixes-10';
+import {underwaterLook} from './water-look.mjs?v=fixes-10';
+import {createShrimp} from './shrimp.js?v=fixes-10';
+import {isReefOccluded,REEFS,BED_Y} from './habitat.mjs?v=fixes-10';
+import {createRobot,PARTS} from './robot.js?v=fixes-10';
+import {PROBE,cameraFrame,projectObservation,cameraAvailable} from './probe.mjs?v=fixes-10';
 
 export function setupScene(container,camCanvas,overlay,world,onPart){
  const scene=new THREE.Scene();scene.background=new THREE.Color('#b1bebd');scene.fog=new THREE.FogExp2('#b1bebd',.004);

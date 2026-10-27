@@ -1,4 +1,4 @@
-import {reefObstacleAt} from './habitat.mjs?v=cycle-9';
+import {reefObstacleAt} from './habitat.mjs?v=fixes-10';
 // Illustrative geometry/interlocks; not certified hardware limits.
 export const PROBE=Object.freeze({mountOffset:.57,halfWidth:.35,halfLength:.29,bottomOffset:.22,clearance:.20,stowDepth:-.55,transitDepth:-.54,sleeveLength:1,mastTop:1.70,latchTime:.45,maxTilt:55,lensOffset:.10,verticalFov:65,far:10,waterDepth:2.5});
 export function probeCenter(s){return{x:s.x+PROBE.mountOffset*Math.sin(s.heading),z:s.z-PROBE.mountOffset*Math.cos(s.heading)}}
@@ -40,3 +40,6 @@ export function isGuardOccluded(point,s){
   else {const u=(min-origin[i])/delta[i],v=(max-origin[i])/delta[i];near=Math.max(near,Math.min(u,v));far=Math.min(far,Math.max(u,v));if(near>far)return false}
  }return near<1&&far>0});
 }
+
+// Cancel motion targets without pretending that an intermediate latch is open or locked.
+export function holdProbe(s){s.targetDepth=s.depth;s.targetTilt=s.tilt;s.maintenancePending=false;s.manualRecovery=false;if(['engaging','releasing'].includes(s.latch)){s.pausedLatch=s.latch;s.latch='paused'}if(['recovering','deploying'].includes(s.probeState))s.probeState='held'}
