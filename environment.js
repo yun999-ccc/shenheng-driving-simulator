@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {REEFS,REEF_BLOCKS,BED_Y} from './habitat.mjs?v=reef-5';
+import {REEFS,REEF_BLOCKS,BED_Y} from './habitat.mjs?v=life-6';
 
 const containerWidth=()=>document.documentElement.clientWidth;
 const hash=n=>{const v=Math.sin(n*127.1+34.3)*43758.5453;return v-Math.floor(v)};
@@ -21,6 +21,24 @@ export function createPondEnvironment(scene,renderer){
  const tileUV=(geo,scale)=>{const uv=geo.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*scale[0],uv.getY(i)*scale[1]);return geo};
  const bed=add(tileUV(new THREE.PlaneGeometry(57,43),[19,14.3]),sandMat,underwater,[0,-2.5,0]);bed.rotation.x=-Math.PI/2;
 
+ const waterLight={time:{value:0},strength:{value:.16}};
+ const wetLight=material=>{material.onBeforeCompile=shader=>{
+  shader.uniforms.wetTime=waterLight.time;shader.uniforms.wetStrength=waterLight.strength;
+  shader.vertexShader='varying vec3 vWetPosition;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
+   vec4 wetPoint=vec4(transformed,1.0);
+   #ifdef USE_INSTANCING
+    wetPoint=instanceMatrix*wetPoint;
+   #endif
+   vWetPosition=(modelMatrix*wetPoint).xyz;`);
+  shader.fragmentShader='uniform float wetTime;uniform float wetStrength;varying vec3 vWetPosition;\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <dithering_fragment>',`#include <dithering_fragment>
+   if(vWetPosition.y<-.5){
+    vec2 p=vWetPosition.xz;float a=sin(p.x*13.+sin(p.y*9.+wetTime*.24)*1.8+wetTime*.4),b=sin(p.y*12.-sin(p.x*7.-wetTime*.19)*1.6);
+    float caustic=pow(max(0.,1.-abs(a+b)*.8),14.);gl_FragColor.rgb*=1.+caustic*wetStrength;
+   }`);
+ };material.customProgramCacheKey=()=> 'pond-wet-light-v6';};
+ wetLight(sandMat);
  // Earth berms slope into the pond. A full landscape is visible beyond the sample area.
  const terrainGeo=new THREE.PlaneGeometry(130,110,130,110);terrainGeo.rotateX(-Math.PI/2);
  const pos=terrainGeo.attributes.position,colors=[];
@@ -80,7 +98,7 @@ export function createPondEnvironment(scene,renderer){
   }
  }
  const brickGeo=new THREE.BufferGeometry();brickGeo.setAttribute('position',new THREE.Float32BufferAttribute(brickPositions,3));brickGeo.setAttribute('color',new THREE.Float32BufferAttribute(brickColors,3));brickGeo.setAttribute('uv',new THREE.Float32BufferAttribute(brickUV,2));brickGeo.setIndex(brickIndices);brickGeo.computeVertexNormals();brickGeo.computeBoundingSphere();
- const reefMesh=add(brickGeo,brickMat,underwater);reefMesh.castShadow=true;reefMesh.userData.part='reef';
+ wetLight(brickMat);const reefMesh=add(brickGeo,brickMat,underwater);reefMesh.castShadow=true;reefMesh.userData.part='reef';
  // A thin colour/texture transition around settled masonry, not simulated bathymetry.
  const apronGeo=new THREE.PlaneGeometry(2.05,1.9,14,14);apronGeo.rotateX(-Math.PI/2);const apronColors=[],ap=apronGeo.attributes.position;
  for(let i=0;i<ap.count;i++){const radius=Math.hypot(ap.getX(i)/1.03,ap.getZ(i)/.95),alpha=Math.max(0,1-radius)*(.25+hash(i)*.25);apronColors.push(.87,.84,.72,alpha)}
@@ -90,7 +108,7 @@ export function createPondEnvironment(scene,renderer){
  REEFS.forEach((reef,i)=>{dummy.position.set(reef.x,BED_Y+.002,reef.z);dummy.rotation.set(0,reef.angle,0);dummy.scale.set(.9+hash(i+91)*.22,1,.9+hash(i+92)*.18);dummy.updateMatrix();aprons.setMatrixAt(i,dummy.matrix)});aprons.computeBoundingSphere();
  const pebbles=new THREE.InstancedMesh(stoneGeo,rockMat,180);underwater.add(pebbles);pebbles.receiveShadow=true;for(let i=0;i<180;i++){dummy.position.set((hash(i+1900)-.5)*21,-2.48,(hash(i+2100)-.5)*15);dummy.rotation.set(hash(i),hash(i+8)*6,hash(i+3));dummy.scale.set(.03+hash(i+5)*.09,.025+hash(i+7)*.05,.03+hash(i+9)*.1);dummy.updateMatrix();pebbles.setMatrixAt(i,dummy.matrix)}pebbles.computeBoundingSphere();
 
- const dustGeo=new THREE.BufferGeometry(),dustPositions=new Float32Array(160*3);for(let i=0;i<160;i++){dustPositions[i*3]=(hash(i+3000)-.5)*22;dustPositions[i*3+1]=-2.35+hash(i+3300)*1.9;dustPositions[i*3+2]=(hash(i+3600)-.5)*16}dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));underwater.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:'#c2c5a5',size:.009,transparent:true,opacity:.23,depthWrite:false})));
+ const dustGeo=new THREE.BufferGeometry(),dustPositions=new Float32Array(160*3);for(let i=0;i<160;i++){dustPositions[i*3]=(hash(i+3000)-.5)*22;dustPositions[i*3+1]=-2.35+hash(i+3300)*1.9;dustPositions[i*3+2]=(hash(i+3600)-.5)*16}dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));underwater.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:'#b9c9a5',size:.005,transparent:true,opacity:.15,depthWrite:false})));
  const skyGeo=new THREE.SphereGeometry(350,24,16),skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{},vertexShader:`varying vec3 vDir;void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vDir;
  float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
@@ -115,14 +133,14 @@ export function createPondEnvironment(scene,renderer){
  }
  void main(){vec2 p=vWorld.xz;float e=.016;float dx=(height(p+vec2(e,0))-height(p-vec2(e,0)))/(2.*e),dz=(height(p+vec2(0,e))-height(p-vec2(0,e)))/(2.*e);vec2 local=p-boatPosition;float along=-dot(local,vec2(sin(heading),-cos(heading))),across=dot(local,vec2(cos(heading),sin(heading)));float leftWake=motorWake(vec2(across,along),-.71,drive.x),rightWake=motorWake(vec2(across,along),.71,drive.y);
  float wake=(leftWake+rightWake)*.065;vec2 rippleGradient=vec2(cos(heading),sin(heading))*wake+vec2(-sin(heading),cos(heading))*wake*.65;
- vec3 n=normalize(vec3(-dx+rippleGradient.x,1.,-dz+rippleGradient.y));vec3 eye=normalize(cameraPosition-vWorld);float fresnel=.035+.965*pow(1.-max(dot(n,eye),0.),5.);vec2 uv=vReflect.xy/vReflect.w+n.xz*.012;vec3 reflected=texture2D(reflectionMap,clamp(uv,.002,.998)).rgb;float ripple=height(p)*2.;vec3 base=mix(vec3(.040,.105,.079),vec3(.073,.107,.063),turbidity)+ripple;vec3 color=mix(base,reflected,clamp(.20+fresnel*.78,0.,.94));float highlight=pow(max(dot(reflect(-sunDirection,n),eye),0.),135.);color+=vec3(1.,.92,.7)*highlight*.75;float shadow=exp(-(local.x*local.x/1.1+local.y*local.y/1.8)*2.);color*=1.-shadow*.20;float bank=min(27.-abs(p.x),20.-abs(p.y));float edge=(1.-smoothstep(0.,.65,bank))*.13;color+=vec3(.18,.19,.12)*edge;gl_FragColor=vec4(color,1.);
+ vec3 n=normalize(vec3(-dx+rippleGradient.x,1.,-dz+rippleGradient.y));vec3 eye=normalize(cameraPosition-vWorld);float fresnel=.035+.965*pow(1.-max(dot(n,eye),0.),5.);vec2 uv=vReflect.xy/vReflect.w+n.xz*.012;vec3 reflected=texture2D(reflectionMap,clamp(uv,.002,.998)).rgb;float ripple=height(p)*2.;vec3 base=mix(vec3(.065,.145,.114),vec3(.094,.135,.080),turbidity)+ripple;vec3 color=mix(base,reflected,clamp(.18+fresnel*.70,0.,.88));float highlight=pow(max(dot(reflect(-sunDirection,n),eye),0.),135.);color+=vec3(1.,.92,.7)*highlight*.75;float shadow=exp(-(local.x*local.x/1.1+local.y*local.y/1.8)*2.);color*=1.-shadow*.20;float bank=min(27.-abs(p.x),20.-abs(p.y));float edge=(1.-smoothstep(0.,.65,bank))*.13;color+=vec3(.18,.19,.12)*edge;gl_FragColor=vec4(color,1.);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
  }`});
  const waterGeo=new THREE.PlaneGeometry(54,40,96,72);waterGeo.rotateX(-Math.PI/2);const water=new THREE.Mesh(waterGeo,waterMat);scene.add(water);
  let reflectionFrame=0;
  const prepare=(camera,s,elapsed,boat)=>{
-  waterUniforms.time.value=elapsed;waterUniforms.boatPosition.value.set(s.x,s.z);waterUniforms.heading.value=s.heading;waterUniforms.speed.value=s.speed;waterUniforms.drive.value.set(s.drive.left,s.drive.right);waterUniforms.turbidity.value=s.turbidity;
+  waterLight.time.value=s.time;waterLight.strength.value=.18*(1-s.turbidity*.7);waterUniforms.time.value=elapsed;waterUniforms.boatPosition.value.set(s.x,s.z);waterUniforms.heading.value=s.heading;waterUniforms.speed.value=s.speed;waterUniforms.drive.value.set(s.drive.left,s.drive.right);waterUniforms.turbidity.value=s.turbidity;
   buoys.forEach((o,i)=>{o.position.y=.035+Math.sin(elapsed*1.4+i)*.018;o.rotation.z=Math.sin(elapsed+i)*.025});
   if(reflectionFrame++%3!==0)return;
   camera.updateMatrixWorld();mirrorCamera.copy(camera);mirrorCamera.position.copy(camera.position);mirrorCamera.position.y=-camera.position.y;camera.getWorldDirection(direction);look.copy(camera.position).add(direction);look.y=-look.y;mirrorCamera.up.set(0,-1,0);mirrorCamera.lookAt(look);mirrorCamera.updateMatrixWorld();

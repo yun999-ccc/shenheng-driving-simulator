@@ -1,4 +1,4 @@
-import {reefObstacleAt} from './habitat.mjs?v=reef-5';
+import {reefObstacleAt} from './habitat.mjs?v=life-6';
 // Illustrative geometry/interlocks; not certified hardware limits.
 export const PROBE=Object.freeze({mountOffset:.57,halfWidth:.35,halfLength:.29,bottomOffset:.22,clearance:.20,stowDepth:-.55,transitDepth:-.54,sleeveLength:1,mastTop:1.70,latchTime:.45,maxTilt:55,lensOffset:.10,verticalFov:65,far:10,waterDepth:2.5});
 export function probeCenter(s){return{x:s.x+PROBE.mountOffset*Math.sin(s.heading),z:s.z-PROBE.mountOffset*Math.cos(s.heading)}}
