@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {makeState,makeWorld,tick,emergencyStop,releaseStop,beginSurvey,returnHome,manual,setDepth,capture,LIMITS,HOME,clearInput} from './simulation.mjs';
+const world=makeWorld();let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS',name)};
+const advance=(s,seconds)=>{for(let i=0;i<Math.ceil(seconds*60);i++)tick(s,1/60,world)};
+test('seeded scene is reproducible',()=>assert.deepEqual(makeWorld(),world));
+test('forward and turn affect shared state',()=>{const s=makeState();s.keys.forward=true;advance(s,1);assert(s.z<HOME.z);s.keys.right=true;advance(s,.5);assert(s.heading>0&&s.x>HOME.x)});
+test('release does not maintain thrust',()=>{const s=makeState();s.keys.forward=true;advance(s,1);clearInput(s);advance(s,4);assert.equal(s.speed,0)});
+test('depth clamps and motion approaches target',()=>{const s=makeState();setDepth(s,99);advance(s,10);assert.equal(s.targetDepth,LIMITS.maxDepth);assert(Math.abs(s.depth-LIMITS.maxDepth)<1e-8);setDepth(s,-2);advance(s,10);assert.equal(s.depth,LIMITS.minDepth)});
+test('emergency freezes all state and cancels route',()=>{const s=makeState();beginSurvey(s);setDepth(s,1.8);advance(s,1);emergencyStop(s);const snapshot=JSON.stringify({...s,covered:[...s.covered],valid:[...s.valid],seen:[...s.seen]});advance(s,3);assert.equal(JSON.stringify({...s,covered:[...s.covered],valid:[...s.valid],seen:[...s.seen]}),snapshot);assert.equal(s.route.length,0);assert.equal(s.recording,false)});
+test('unlock clears old task and depth target',()=>{const s=makeState();beginSurvey(s);s.keys.forward=true;emergencyStop(s);releaseStop(s);advance(s,1);assert.equal(s.mode,'manual');assert.equal(s.speed,0);assert.deepEqual(s.keys,{});assert.equal(s.targetDepth,s.depth)});
+test('manual takeover cancels automatic task',()=>{const s=makeState();beginSurvey(s);manual(s);assert.equal(s.route.length,0);assert.equal(s.mode,'manual')});
+test('survey stays inside bounds and completes',()=>{const s=makeState();beginSurvey(s);advance(s,250);assert.equal(s.mode,'manual');assert(s.records.length>0);assert(Math.abs(s.x)<=LIMITS.x&&Math.abs(s.z)<=LIMITS.z);assert(s.seen.size<=world.length)});
+test('return home completes without teleport',()=>{const s=makeState();s.x=4;s.z=-3;returnHome(s);assert.equal(s.x,4);advance(s,80);assert.equal(s.mode,'manual');assert(Math.hypot(s.x-HOME.x,s.z-HOME.z)<.6)});
+test('boundary stops translation',()=>{const s=makeState();s.z=-6;s.heading=0;s.keys.forward=true;advance(s,15);assert(s.z>=-LIMITS.z+.9);assert.equal(s.speed,0)});
+test('simulated observations use known IDs, no count inflation',()=>{const s=makeState();for(let i=0;i<10;i++)capture(s,world);const count=s.seen.size;capture(s,world);assert.equal(s.seen.size,count);assert(s.records.every(r=>r.dataType==='SIMULATED_ONLY'))});
+test('poor visibility creates review flag without asserting targets',()=>{const s=makeState();s.turbidity=1;s.x=5;s.z=-2;const r=capture(s,world);assert(r.quality<60);assert.equal(s.seen.size,0);assert.equal(s.flags.length,1);capture(s,world);assert.equal(s.flags.length,1)});
+console.log(`${passed}/12 state-model checks passed; not a field or hydrodynamic validation.`);
