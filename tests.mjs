@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {makeState,makeWorld,tick,emergencyStop,releaseStop,beginSurvey,returnHome,manual,setDepth,capture,LIMITS,HOME,clearInput} from './simulation.mjs';
+import {REEFS,isReefOccluded} from './habitat.mjs';
 const world=makeWorld();let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS',name)};
 const advance=(s,seconds)=>{for(let i=0;i<Math.ceil(seconds*60);i++)tick(s,1/60,world)};
 test('seeded scene is reproducible',()=>assert.deepEqual(makeWorld(),world));
@@ -14,4 +15,5 @@ test('return home completes without teleport',()=>{const s=makeState();s.x=4;s.z
 test('boundary stops translation',()=>{const s=makeState();s.z=-6;s.heading=0;s.keys.forward=true;advance(s,15);assert(s.z>=-LIMITS.z+.9);assert.equal(s.speed,0)});
 test('simulated observations use known IDs, no count inflation',()=>{const s=makeState();for(let i=0;i<10;i++)capture(s,world);const count=s.seen.size;capture(s,world);assert.equal(s.seen.size,count);assert(s.records.every(r=>r.dataType==='SIMULATED_ONLY'))});
 test('poor visibility creates review flag without asserting targets',()=>{const s=makeState();s.turbidity=1;s.x=5;s.z=-2;const r=capture(s,world);assert(r.quality<60);assert.equal(s.seen.size,0);assert.equal(s.flags.length,1);capture(s,world);assert.equal(s.flags.length,1)});
-console.log(`${passed}/12 state-model checks passed; not a field or hydrodynamic validation.`);
+test('reef roof blocks synthetic observation and count',()=>{const s=makeState(),r=REEFS[0];s.x=r.x;s.z=r.z+.57;const target={id:999,x:r.x,z:r.z};assert(isReefOccluded(target,{x:r.x,z:r.z},1.6));const observation=capture(s,[target]);assert.equal(observation.visible.length,0);assert.equal(s.seen.size,0);assert(!isReefOccluded({x:20,z:20},{x:20,z:20},1.6))});
+console.log(`${passed}/13 state-model checks passed; not a field or hydrodynamic validation.`);

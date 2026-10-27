@@ -26,3 +26,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+Poly Haven textures (CC0):
+https://polyhaven.com/a/coast_sand_02
+https://polyhaven.com/a/brown_mud_02
+https://polyhaven.com/a/rock_01
+License: https://polyhaven.com/license
+Map download URLs and roles: assets/textures/sources.json

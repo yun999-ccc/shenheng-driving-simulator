@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {makeState,makeWorld,tick,capture,quality,beginSurvey,returnHome,manual,emergencyStop,releaseStop,setDepth,clearInput,LIMITS} from './simulation.mjs';
-import {setupScene} from './scene.js';
+import {makeState,makeWorld,tick,capture,quality,beginSurvey,returnHome,manual,emergencyStop,releaseStop,setDepth,clearInput,LIMITS} from './simulation.mjs?v=pond-1';
+import {setupScene} from './scene.js?v=pond-1';
 let state=makeState();const world=makeWorld();const $=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)];let toastTimer,view,scale=1,accumulator=0,lastUI=0;
 function toast(text){$('#toast').textContent=text;$('#toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.add('hidden'),3200)}
 function part(info){$('#part-name').textContent=info[0];$('#part-description').textContent=info[1];$('#part-detail').classList.remove('hidden')}

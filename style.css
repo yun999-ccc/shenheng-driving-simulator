@@ -17,3 +17,5 @@ main{max-width:1700px;margin:auto;padding:28px 36px 0}.page-heading{display:flex
 
 /* Generous pointer targets at all breakpoints. */
 .drive-key{min-width:44px;min-height:44px}.direction-pad{grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px}.view-tabs button{min-height:40px}.rail-button{min-height:48px}
+
+.world-coordinate{color:#344e49;background:#f7fbf0bf;padding:8px 10px;border-radius:8px;gap:4px;backdrop-filter:blur(5px)}.world-coordinate em{color:#52685a}.compass{line-height:1}.compass>span{font-size:22px}
