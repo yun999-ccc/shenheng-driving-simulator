@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import {THRUSTERS,jetPoint} from './propulsion.mjs?v=recovery-4';
-import {PROBE,telescopicSections,GUARD} from './probe.mjs?v=recovery-4';
+import {THRUSTERS,jetPoint} from './propulsion.mjs?v=reef-5';
+import {PROBE,telescopicSections,GUARD} from './probe.mjs?v=reef-5';
 
 export const PARTS={
+ reef:['错层砖石参礁 · 合成结构','多块带缺角的砖石搭接，保留入口、接缝和部分封盖。表面附着与淤积只作视觉示意；形状、布局及海参分区均为合成，不是养殖设施施工图或真实存量。'],
  hull:['双体浮筒与回收点','保留中央观测通道，前后提手与连接点用于回收布置。浮力、吃水和提拉强度尚未核算。'],
  battery:['低位独立电池舱','电池舱分置在浮筒甲板低处，并设可拆检修盖。降低布置高度不等于已经验证重心或稳性。'],
  box:['后置控制与检修舱','低矮控制舱、密封接缝、走线口和实体急停按钮为概念布局，尚未完成电气和防水设计。'],

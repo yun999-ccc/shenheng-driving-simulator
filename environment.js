@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {REEFS} from './habitat.mjs?v=recovery-4';
+import {REEFS,REEF_BLOCKS,BED_Y} from './habitat.mjs?v=reef-5';
 
 const containerWidth=()=>document.documentElement.clientWidth;
 const hash=n=>{const v=Math.sin(n*127.1+34.3)*43758.5453;return v-Math.floor(v)};
@@ -68,11 +68,26 @@ export function createPondEnvironment(scene,renderer){
  const wood=mat('#887964',.96);for(let i=0;i<15;i++)box(1.6,.10,.2,wood,above,[-18,.27,15-i*.22]);for(const x of [-18.6,-17.4])for(const z of [12,15])cylinder(.055,2.6,rust,above,[x,-.5,z]);
  const markerMat=mat('#dfb260',.6),markerWhite=mat('#e5e4d7',.6),buoys=[];
  for(const x of [-10,10])for(const z of [-7,7]){const buoy=new THREE.Group();buoy.position.set(x,.035,z);above.add(buoy);const body=add(new THREE.SphereGeometry(.13,14,10),markerMat,buoy,[0,.04,0]);body.scale.y=.65;cylinder(.025,.34,markerWhite,buoy,[0,.16,0]);buoys.push(buoy)}
- // Submerged low brick shelters and individual cobbles; no target-like decorative vegetation.
- const brickMat=new THREE.MeshStandardMaterial({color:'#67614c',map:rockMap,normalMap:rockNormal,normalScale:new THREE.Vector2(.5,.5),roughness:.93});
- const supportGeo=new THREE.BoxGeometry(.18,.26,.20),roofGeo=new THREE.BoxGeometry(1.16,.12,.72);
- const supports=new THREE.InstancedMesh(supportGeo,brickMat,REEFS.length*4),roofs=new THREE.InstancedMesh(roofGeo,brickMat,REEFS.length);supports.castShadow=roofs.castShadow=true;supports.receiveShadow=roofs.receiveShadow=true;underwater.add(supports,roofs);
- REEFS.forEach((reef,i)=>{let j=0;for(const x of [-.46,.46])for(const z of [-.23,.23]){dummy.position.set(reef.x+x*Math.cos(reef.angle)+z*Math.sin(reef.angle),-2.37,reef.z-x*Math.sin(reef.angle)+z*Math.cos(reef.angle));dummy.rotation.set(0,reef.angle,0);dummy.scale.set(1,1,1);dummy.updateMatrix();supports.setMatrixAt(i*4+j++,dummy.matrix)}dummy.position.set(reef.x,-2.18,reef.z);dummy.updateMatrix();roofs.setMatrixAt(i,dummy.matrix)});supports.computeBoundingSphere();roofs.computeBoundingSphere();
+ // Individual bevelled masonry pieces, sharing exact faces with occlusion queries.
+ const brickMat=new THREE.MeshStandardMaterial({color:'#c1bea8',map:rockMap,normalMap:rockNormal,normalScale:new THREE.Vector2(.38,.38),roughness:.97,vertexColors:true});
+ const brickPositions=[],brickColors=[],brickUV=[],brickIndices=[];
+ for(const block of REEF_BLOCKS){const offset=brickPositions.length/3;brickPositions.push(...block.positions);brickIndices.push(...block.indices.map(i=>i+offset));
+  const base=new THREE.Color().setHSL(.09+hash(block.seed)*.025,.10,.48+hash(block.seed+4)*.13);
+  for(let i=0;i<block.positions.length/3;i++){
+   const ring=Math.floor(i/8),c=base.clone(),coating=hash(block.seed*7+i*.1)>.52&&ring>=2;
+   if(coating)c.lerp(new THREE.Color('#5d6246'),.24);if(ring===0||ring===3)c.multiplyScalar(1.09);
+   brickColors.push(c.r,c.g,c.b);brickUV.push(block.positions[i*3]*2.7,block.positions[i*3+2]*2.7+block.positions[i*3+1]*1.4);
+  }
+ }
+ const brickGeo=new THREE.BufferGeometry();brickGeo.setAttribute('position',new THREE.Float32BufferAttribute(brickPositions,3));brickGeo.setAttribute('color',new THREE.Float32BufferAttribute(brickColors,3));brickGeo.setAttribute('uv',new THREE.Float32BufferAttribute(brickUV,2));brickGeo.setIndex(brickIndices);brickGeo.computeVertexNormals();brickGeo.computeBoundingSphere();
+ const reefMesh=add(brickGeo,brickMat,underwater);reefMesh.castShadow=true;reefMesh.userData.part='reef';
+ // A thin colour/texture transition around settled masonry, not simulated bathymetry.
+ const apronGeo=new THREE.PlaneGeometry(2.05,1.9,14,14);apronGeo.rotateX(-Math.PI/2);const apronColors=[],ap=apronGeo.attributes.position;
+ for(let i=0;i<ap.count;i++){const radius=Math.hypot(ap.getX(i)/1.03,ap.getZ(i)/.95),alpha=Math.max(0,1-radius)*(.25+hash(i)*.25);apronColors.push(.87,.84,.72,alpha)}
+ apronGeo.setAttribute('color',new THREE.Float32BufferAttribute(apronColors,4));
+ const apronMat=new THREE.MeshStandardMaterial({color:'#aaa084',map:sandMap,roughness:1,vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ const aprons=new THREE.InstancedMesh(apronGeo,apronMat,REEFS.length);underwater.add(aprons);
+ REEFS.forEach((reef,i)=>{dummy.position.set(reef.x,BED_Y+.002,reef.z);dummy.rotation.set(0,reef.angle,0);dummy.scale.set(.9+hash(i+91)*.22,1,.9+hash(i+92)*.18);dummy.updateMatrix();aprons.setMatrixAt(i,dummy.matrix)});aprons.computeBoundingSphere();
  const pebbles=new THREE.InstancedMesh(stoneGeo,rockMat,180);underwater.add(pebbles);pebbles.receiveShadow=true;for(let i=0;i<180;i++){dummy.position.set((hash(i+1900)-.5)*21,-2.48,(hash(i+2100)-.5)*15);dummy.rotation.set(hash(i),hash(i+8)*6,hash(i+3));dummy.scale.set(.03+hash(i+5)*.09,.025+hash(i+7)*.05,.03+hash(i+9)*.1);dummy.updateMatrix();pebbles.setMatrixAt(i,dummy.matrix)}pebbles.computeBoundingSphere();
 
  const dustGeo=new THREE.BufferGeometry(),dustPositions=new Float32Array(160*3);for(let i=0;i<160;i++){dustPositions[i*3]=(hash(i+3000)-.5)*22;dustPositions[i*3+1]=-2.35+hash(i+3300)*1.9;dustPositions[i*3+2]=(hash(i+3600)-.5)*16}dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));underwater.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:'#c2c5a5',size:.009,transparent:true,opacity:.23,depthWrite:false})));
@@ -117,5 +132,5 @@ export function createPondEnvironment(scene,renderer){
   renderer.setRenderTarget(reflection);renderer.render(scene,mirrorCamera);renderer.setRenderTarget(target);
   submerged.forEach(o=>o.visible=true);underwater.visible=true;water.visible=true;
  };
- return{above,underwater,water,sky,prepare,dispose(){reflection.dispose();envTarget.dispose()}};
+ return{above,underwater,water,sky,reefMesh,prepare,dispose(){reflection.dispose();envTarget.dispose()}};
 }

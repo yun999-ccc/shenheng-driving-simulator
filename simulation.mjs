@@ -1,10 +1,17 @@
-import {updateDrive,stopDrive} from './propulsion.mjs?v=recovery-4';
-import {isReefOccluded,REEFS} from './habitat.mjs?v=recovery-4';
-import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs?v=recovery-4';
+import {updateDrive,stopDrive} from './propulsion.mjs?v=reef-5';
+import {isReefOccluded,REEFS,reefPoint,clearReefFootprint} from './habitat.mjs?v=reef-5';
+import {PROBE,probeCenter,cameraFrame,projectObservation,obstacleBelow,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs?v=reef-5';
 export const LIMITS={x:10,z:7,waterDepth:2.5,minDepth:.3,maxDepth:1.9,maxSpeed:1.6};
 export const HOME={x:-6,z:4};
 export function seeded(seed=48271){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
-export function makeWorld(){const r=seeded(20261027);return Array.from({length:88},(_,i)=>({id:i+1,species:'sea-cucumber',x:(r()-.5)*18,z:(r()-.5)*12,angle:r()*Math.PI*2,size:.10+r()*.13}))}
+export function makeWorld(){const r=seeded(20261027),world=[];
+ for(const [reefIndex,reef] of REEFS.entries())for(const zone of ['open','entrance','interior']){
+  const local=zone==='open'?[.04,.9]:zone==='entrance'?[.04,.46]:[0,-.03],p=reefPoint(reef,...local);
+  world.push({id:world.length+1,species:'sea-cucumber',...p,zone,reefIndex,angle:reef.angle+(r()-.5)*.8,size:.10+r()*.035});
+ }
+ while(world.length<88){const x=(r()-.5)*18,z=(r()-.5)*12;if(!clearReefFootprint({x,z},.35))continue;world.push({id:world.length+1,species:'sea-cucumber',x,z,y:-2.435,zone:'open',reefIndex:null,angle:r()*Math.PI*2,size:.10+r()*.10})}
+ return world;
+}
 export function makeState(){return{x:HOME.x,z:HOME.z,heading:0,speed:0,drive:{left:0,right:0},driveCommand:{left:0,right:0},depth:.8,targetDepth:.8,tilt:0,targetTilt:0,cameraAspect:1.6,probeState:'ready',probeReason:'',latch:'open',pausedLatch:'',latchTimer:0,liftPower:true,manualRecovery:false,maintenance:false,maintenancePending:false,lampSpacing:.50,mode:'manual',stopped:false,recording:false,time:0,battery:98,turbidity:.25,keys:{},route:[],routeIndex:0,track:[],covered:new Set,valid:new Set,unobserved:new Set,hiddenReefs:new Set,seen:new Set,flags:[],records:[],sampleTimer:0,trackTimer:0,notice:'新版观测头已就绪。靠近参礁时，请留意模拟净空。',lastQuality:0}}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const angle=n=>Math.atan2(Math.sin(n),Math.cos(n));

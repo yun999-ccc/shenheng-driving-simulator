@@ -1,4 +1,4 @@
-import {REEFS} from './habitat.mjs?v=recovery-4';
+import {reefObstacleAt} from './habitat.mjs?v=reef-5';
 // Illustrative geometry/interlocks; not certified hardware limits.
 export const PROBE=Object.freeze({mountOffset:.57,halfWidth:.35,halfLength:.29,bottomOffset:.22,clearance:.20,stowDepth:-.55,transitDepth:-.54,sleeveLength:1,mastTop:1.70,latchTime:.45,maxTilt:55,lensOffset:.10,verticalFov:65,far:10,waterDepth:2.5});
 export function probeCenter(s){return{x:s.x+PROBE.mountOffset*Math.sin(s.heading),z:s.z-PROBE.mountOffset*Math.cos(s.heading)}}
@@ -12,9 +12,8 @@ export function projectObservation(point,s){
  return{x,y,distance:d,inside:d>.05&&d<PROBE.far&&Math.abs(x)<1&&Math.abs(y)<1};
 }
 export function obstacleBelow(s){
- const c=probeCenter(s),radius=Math.hypot(PROBE.halfWidth,PROBE.halfLength);let height=0,index=-1;
- REEFS.forEach((r,i)=>{const dx=c.x-r.x,dz=c.z-r.z,cos=Math.cos(r.angle),sin=Math.sin(r.angle);if(Math.abs(dx*cos-dz*sin)<=r.halfX+radius&&Math.abs(dx*sin+dz*cos)<=r.halfZ+radius&&r.roofHeight>height){height=r.roofHeight;index=i}});
- return{height,index,clearance:PROBE.waterDepth-s.depth-PROBE.bottomOffset-height,safeDepth:PROBE.waterDepth-height-PROBE.bottomOffset-PROBE.clearance};
+ const c=probeCenter(s),radius=Math.hypot(PROBE.halfWidth,PROBE.halfLength),{height,index,blockIndex}=reefObstacleAt(c,radius);
+ return{height,index,blockIndex,clearance:PROBE.waterDepth-s.depth-PROBE.bottomOffset-height,safeDepth:PROBE.waterDepth-height-PROBE.bottomOffset-PROBE.clearance};
 }
 
 export function telescopicSections(depth){const length=PROBE.sleeveLength,anchor=PROBE.mastTop,distalTopOffset=.12,extension=(anchor-length+depth-distalTopOffset)/3;return Array.from({length:4},(_,i)=>({length,top:anchor-i*extension,bottom:anchor-i*extension-length,center:anchor-length/2-i*extension}))}

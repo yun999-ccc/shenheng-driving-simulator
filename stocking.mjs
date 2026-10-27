@@ -1,3 +1,4 @@
+import {clearReefFootprint} from './habitat.mjs?v=reef-5';
 // Illustrative standing population, not a stocking instruction or survival model.
 export const SHRIMP_SCENARIO=Object.freeze({
  species:'日本对虾（车虾）',sampleWidth:20,sampleLength:14,
@@ -6,11 +7,10 @@ export const SHRIMP_SCENARIO=Object.freeze({
 });
 const random=i=>{const n=Math.sin(i*127.1+71.7)*43758.5453;return n-Math.floor(n)};
 export function makeShrimpPopulation(){
- return Array.from({length:SHRIMP_SCENARIO.count},(_,i)=>({
-  id:`shrimp-${i+1}`,species:'shrimp',x:(random(i+1)-.5)*19.4,
-  z:(random(i+1900)-.5)*13.4,phase:random(i+800)*Math.PI*2,
-  scale:.8+random(i+3600)*.4
- }));
+ return Array.from({length:SHRIMP_SCENARIO.count},(_,i)=>{
+  let x,z,attempt=0;do{const seed=i+attempt++*17011;x=(random(seed+1)-.5)*19.4;z=(random(seed+1900)-.5)*13.4}while(!clearReefFootprint({x,z},.36));
+  return{id:`shrimp-${i+1}`,species:'shrimp',x,z,phase:random(i+800)*Math.PI*2,scale:.8+random(i+3600)*.4};
+ });
 }
 // Bounded near-bottom motion, driven by simulation time for repeatable resets.
 export function shrimpPose(animal,time){

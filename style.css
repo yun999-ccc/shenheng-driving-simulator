@@ -49,3 +49,5 @@ main{max-width:1700px;margin:auto;padding:28px 36px 0}.page-heading{display:flex
 .mechanism-dialog{width:min(1100px,94vw);max-width:1100px}.mechanism-dialog img{display:block;width:100%;height:auto}.mechanism-dialog p{font-size:12px;line-height:1.8;color:#65775f}
 
 .world-panel.servicing .world-coordinate{display:none}
+
+.reef-caption{display:none;position:absolute;z-index:2;bottom:68px;left:20px;right:20px;padding:10px 12px;background:#eff5e6e8;border:1px solid #d6e0cd;border-radius:8px;color:#3a5b41;pointer-events:none}.reef-view .reef-caption{display:flex;flex-direction:column;gap:5px}.reef-caption strong{font-size:12px;font-weight:500}.reef-caption span{font-size:10px;color:#6c7f63}.reef-view .part-detail{bottom:145px}@media(max-width:700px){.reef-caption{left:12px;right:12px;bottom:62px;padding:8px}.reef-caption strong{font-size:10px}.reef-caption span{font-size:9px}.reef-view .part-detail{bottom:140px}}
