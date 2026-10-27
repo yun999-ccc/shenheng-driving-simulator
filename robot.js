@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import {PROBE,telescopicSections} from './probe.mjs?v=machine-2';
+import {THRUSTERS,jetPoint} from './propulsion.mjs?v=thrusters-3';
+import {PROBE,telescopicSections} from './probe.mjs?v=thrusters-3';
 
 export const PARTS={
  hull:['双体浮筒与回收点','保留中央观测通道，前后提手与连接点用于回收布置。浮力、吃水和提拉强度尚未核算。'],
  battery:['低位独立电池舱','电池舱分置在浮筒甲板低处，并设可拆检修盖。降低布置高度不等于已经验证重心或稳性。'],
  box:['后置控制与检修舱','低矮控制舱、密封接缝、走线口和实体急停按钮为概念布局，尚未完成电气和防水设计。'],
- thruster:['带可拆护罩的双推进器','推进器缩入后部保护架，前后粗格栅用于隔挡较大异物。仍可能缠绕或堵塞，需验证推力损失和清理方式。'],
+ thruster:['左右独立双推进器 · 模拟','导管、固定护网、轮毂和三片桨叶分开建模。正反转与左右驱动状态联动；检视中的粒子只表示水流方向，转速与流速均非实测。护网仍需验证阻力、缠绕和清理方式。'],
  lift:['四节伸缩导向与卷扬','一节外套筒和三节滑套保持固定长度，通过重叠变化升降。卷扬、导轮及内走线路径可辨认；传动联动、止回与载荷尚未设计。'],
  pod:['可倾转观测头与保护框','镜头可由垂直下视倾转至55°，两侧分置补光，独立下视测距模块用于净空概念。保护逻辑只读取合成几何，未接真实传感器。']
 };
@@ -22,16 +23,26 @@ export function createRobot(scene){
  function lid(w,d,parent,pos,part){box(w+.025,.018,d+.025,rubber,parent,[pos[0],pos[1]-.012,pos[2]],part);box(w,.035,d,teal,parent,pos,part);for(const x of [-w*.39,w*.39])for(const z of [-d*.37,d*.37])cyl(.012,.007,metal,parent,[pos[0]+x,pos[1]+.022,pos[2]+z],part)}
  const hullShape=new THREE.Shape();hullShape.moveTo(-.25,-1.1);hullShape.lineTo(-.25,.75);hullShape.quadraticCurveTo(-.25,1.15,0,1.36);hullShape.quadraticCurveTo(.25,1.15,.25,.75);hullShape.lineTo(.25,-1.1);hullShape.quadraticCurveTo(0,-1.23,-.25,-1.1);
  const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:.29,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.035,bevelThickness:.04});hullGeo.rotateX(-Math.PI/2);
- const propellers=[];
+ const propellers=[],flowEffects=new THREE.Group(),labels=new THREE.Group();boat.add(flowEffects,labels);flowEffects.visible=false;labels.visible=false;
  for(const x of [-.71,.71]){
   mesh(hullGeo,shell,boat,[x,-.16,0],'hull');box(.38,.11,.63,dark,boat,[x,.22,.28],'battery');lid(.37,.59,boat,[x,.30,.28],'battery');
   handle(boat,x,.16,-.91,'hull');handle(boat,x,.16,.88,'hull');
   // Duct and coarse end grilles remain detachable concept parts, not weed-proof claims.
-  const duct=mesh(new THREE.CylinderGeometry(.145,.145,.28,24,1,true),dark,boat,[x,-.36,.85],'thruster');duct.rotation.x=Math.PI/2;
+  const duct=mesh(new THREE.CylinderGeometry(.145,.145,.28,32,1,true),teal,boat,[x,-.36,.85],'thruster');duct.rotation.x=Math.PI/2;duct.material=teal.clone();duct.material.side=THREE.DoubleSide;
   for(const z of [.70,1.0]){mesh(new THREE.TorusGeometry(.15,.018,8,24),metal,boat,[x,-.36,z],'thruster');
    for(let j=-2;j<=2;j++){const gx=j*.045,len=Math.sqrt(.14*.14-gx*gx);bar([x+gx,-.36-len,z],[x+gx,-.36+len,z],.006,metal,boat,'thruster')}}
   box(.07,.29,.07,metal,boat,[x,-.11,.83],'thruster');
-  const prop=new THREE.Group();prop.position.set(x,-.36,.85);boat.add(prop);for(let i=0;i<3;i++){const blade=box(.23,.028,.015,rubber,prop,[0,0,0],'thruster');blade.rotation.z=i*Math.PI/3}propellers.push(prop);
+  const config=THRUSTERS.find(t=>t.x===x),prop=new THREE.Group();prop.position.set(x,-.36,.85);boat.add(prop);
+  const hub=cyl(.034,.075,metal,prop,[0,0,0],'thruster');hub.rotation.x=Math.PI/2;
+  // Each swept blade extends outwards from the hub; mirrored rotors have opposite handedness.
+  const bladeShape=new THREE.Shape();bladeShape.moveTo(.022,-.012);bladeShape.bezierCurveTo(.053,-.027,.096,-.025,.128,.008);bladeShape.quadraticCurveTo(.127,.029,.105,.037);bladeShape.quadraticCurveTo(.057,.039,.022,.012);bladeShape.closePath();
+  const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.008,bevelEnabled:true,bevelThickness:.002,bevelSize:.002,bevelSegments:2,steps:1});bladeGeo.translate(0,0,-.004);
+  for(let i=0;i<3;i++){const blade=mesh(bladeGeo,amber,prop,[0,0,0],'thruster');blade.scale.y=config.hand;blade.rotation.z=i*Math.PI*2/3;blade.rotation.x=.18*config.hand}
+  const positions=new Float32Array(72*3),flowGeo=new THREE.BufferGeometry();flowGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  const flow=new THREE.Points(flowGeo,new THREE.PointsMaterial({color:'#b9dfcc',size:.021,transparent:true,opacity:.55,depthWrite:false}));flow.position.copy(prop.position);flow.frustumCulled=false;flowEffects.add(flow);
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;const context=canvas.getContext('2d');context.fillStyle='#163e37dd';context.fillRect(0,0,256,64);context.fillStyle='#edf4e6';context.font='28px sans-serif';context.textAlign='center';context.fillText(config.side==='left'?'左推进器':'右推进器',128,42);
+  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false,transparent:true}));label.position.set(x,-.04,1.07);label.scale.set(.64,.16,1);label.renderOrder=5;labels.add(label);
+  propellers.push({rotor:prop,flow,config,phase:0});
   for(const side of [-1,1])bar([x+side*.19,-.14,.62],[x+side*.19,-.52,1.07],.017,teal,boat,'thruster');
  }
  for(const z of [-.57,.62]){box(1.80,.085,.10,metal,boat,[0,.24,z],'hull');for(const x of [-.65,.65])box(.15,.13,.18,dark,boat,[x,.25,z],'hull')}
@@ -63,10 +74,16 @@ export function createRobot(scene){
  for(const x of [-.25,.25]){bar([x*.52,0,0],[x,-.015,0],.012,metal,gimbal,'pod');mesh(lampGeo,dark,gimbal,[x,-.025,0],'pod');mesh(new THREE.CircleGeometry(.029,14),lampMat,gimbal,[x,-.056,0],'pod').rotation.x=Math.PI/2}
  // Separate downward range concept is fixed on the cage, independent of camera tilt.
  cyl(.028,.06,teal,pod,[.23,-.10,.18],'pod');mesh(new THREE.CircleGeometry(.023,14),rubber,pod,[.23,-.131,.18],'pod').rotation.x=Math.PI/2;
- let lastTime=0,lastHeading=0;
- return{boat,pod,gimbal,update(s){
+ let lastTime=0;
+ return{boat,pod,gimbal,setInspection(value){flowEffects.visible=value;labels.visible=value},update(s){
   boat.position.set(s.x,0,s.z);boat.rotation.set(0,-s.heading,0);pod.position.y=-s.depth;gimbal.rotation.x=(s.tilt||0)*Math.PI/180;
   telescopicSections(s.depth).forEach((section,i)=>sleeves[i].position.y=section.center);
-  const dt=Math.max(0,s.time-lastTime),yaw=dt>0?Math.atan2(Math.sin(s.heading-lastHeading),Math.cos(s.heading-lastHeading))/dt:0;lastTime=s.time;lastHeading=s.heading;propellers.forEach((p,i)=>p.rotation.z+=(s.speed*12+(i?1:-1)*yaw*5)*dt);drum.rotation.x+=Math.abs(s.targetDepth-s.depth)>.01?dt*1.5:0;
+  const dt=Math.max(0,s.time-lastTime);lastTime=s.time;
+  propellers.forEach(({rotor,flow,config},i)=>{
+   const motor=propellers[i],command=s.drive[config.side];rotor.rotation.z+=command*config.hand*32*dt;
+   motor.phase+=dt*(.3+Math.abs(command)*1.3);flow.visible=Math.abs(command)>.02;
+   const position=flow.geometry.attributes.position;for(let j=0;j<position.count;j++){const p=jetPoint(j,position.count,motor.phase,command);position.setXYZ(j,p.x,p.y,p.z)}position.needsUpdate=true;
+  });
+  drum.rotation.x+=Math.abs(s.targetDepth-s.depth)>.01?dt*1.5:0;
  }};
 }

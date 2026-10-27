@@ -1,3 +1,4 @@
+import {mixDrive,jetPoint} from './propulsion.mjs';
 import {PROBE,obstacleBelow,cameraFrame,projectObservation,telescopicSections} from './probe.mjs';
 import {SHRIMP_SCENARIO,makeShrimpPopulation,shrimpPose} from './stocking.mjs';
 import assert from 'node:assert/strict';
@@ -32,4 +33,11 @@ test('tilt limit and invalid depth inputs preserve finite state',()=>{const s=ma
 test('telescopic stroke preserves fixed lengths, overlap and distal connection',()=>{for(const d of [.3,.8,1.3,1.9]){const sections=telescopicSections(d);assert.equal(sections.length,4);for(let i=0;i<4;i++){assert(Math.abs(sections[i].top-sections[i].bottom-.9)<1e-8);if(i)assert(sections[i].top-sections[i-1].bottom>.15)}assert(Math.abs(sections[3].bottom-(-d+.12))<1e-8)}});
 test('observation filter obeys the rendered camera far plane',()=>{const s=makeState(),f=cameraFrame(s);s.tilt=55;const p={x:f.origin.x,z:f.origin.z-20};assert(!projectObservation(p,s).inside)});
 function observationCenterForTest(s){return{x:s.x+.57*Math.sin(s.heading),z:s.z-.57*Math.cos(s.heading)}}
-console.log(`${passed}/26 state-model checks passed; not a field or hydrodynamic validation.`);
+test('mixed commands remain bounded and preserve turn direction',()=>{for(const forward of [-1,-.3,0,.4,1])for(const turn of [-1,0,1]){const d=mixDrive(forward,turn);assert(Math.abs(d.left)<=1&&Math.abs(d.right)<=1);assert.equal(Math.sign(d.left-d.right),Math.sign(turn))}});
+test('forward starts motors before hull reaches cruising speed',()=>{const s=makeState();s.keys.forward=true;advance(s,.1);assert.equal(s.driveCommand.left,1);assert.equal(s.drive.left,s.drive.right);assert(s.drive.left>0&&s.drive.left<1);assert(s.speed<LIMITS.maxSpeed*.2)});
+test('pivot uses opposite motors without forward translation',()=>{const s=makeState();s.keys.right=true;advance(s,1);assert(s.drive.left>.9&&s.drive.right<-.9);assert(s.heading>0);assert.equal(s.speed,0);assert.equal(s.x,HOME.x);assert.equal(s.z,HOME.z)});
+test('released motors stop while the hull still coasts',()=>{const s=makeState();s.keys.forward=true;advance(s,1);clearInput(s);advance(s,.9);assert.equal(s.drive.left,0);assert.equal(s.drive.right,0);assert(s.speed>.01);assert.equal(s.driveCommand.left,0)});
+test('reverse commands and inspection flow point towards the bow',()=>{const s=makeState();s.keys.back=true;advance(s,1);assert(s.drive.left<-.9&&s.speed<0);assert(s.z>HOME.z);for(let i=0;i<72;i++){assert(jetPoint(i,72,1.4,-1).z<0);assert(jetPoint(i,72,1.4,1).z>0)}});
+test('emergency cancels both motor commands and response immediately',()=>{const s=makeState();s.keys.forward=true;advance(s,.3);emergencyStop(s);assert.deepEqual(s.drive,{left:0,right:0});assert.deepEqual(s.driveCommand,{left:0,right:0});releaseStop(s);advance(s,.5);assert.equal(s.drive.left,0)});
+test('probe protection stops both motors and recovery does not restart them',()=>{const s=makeState(),r=REEFS[0];s.x=r.x;s.z=r.z+2.8;s.depth=1.9;s.targetDepth=1.9;s.keys.forward=true;advance(s,4);assert.equal(s.probeState,'blocked');assert.deepEqual(s.drive,{left:0,right:0});assert.deepEqual(s.driveCommand,{left:0,right:0});retractProbe(s);advance(s,7);assert.equal(s.drive.left,0)});
+console.log(`${passed} state-model checks passed; not a field or hydrodynamic validation.`);

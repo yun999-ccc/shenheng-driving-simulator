@@ -1,4 +1,4 @@
-import {REEFS} from './habitat.mjs?v=machine-2';
+import {REEFS} from './habitat.mjs?v=thrusters-3';
 // Illustrative geometry/interlocks; not certified hardware limits.
 export const PROBE=Object.freeze({mountOffset:.57,halfWidth:.35,halfLength:.29,bottomOffset:.22,clearance:.20,stowDepth:.30,transitDepth:.40,maxTilt:55,lensOffset:.10,verticalFov:65,far:10,waterDepth:2.5});
 export function probeCenter(s){return{x:s.x+PROBE.mountOffset*Math.sin(s.heading),z:s.z-PROBE.mountOffset*Math.cos(s.heading)}}

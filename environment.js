@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {REEFS} from './habitat.mjs?v=machine-2';
+import {REEFS} from './habitat.mjs?v=thrusters-3';
 
 const containerWidth=()=>document.documentElement.clientWidth;
 const hash=n=>{const v=Math.sin(n*127.1+34.3)*43758.5453;return v-Math.floor(v)};
@@ -87,20 +87,27 @@ export function createPondEnvironment(scene,renderer){
 
  const reflection=new THREE.WebGLRenderTarget(containerWidth()>700?1024:512,containerWidth()>700?1024:512,{type:THREE.HalfFloatType});
  const mirrorCamera=new THREE.PerspectiveCamera(),textureMatrix=new THREE.Matrix4(),biasMatrix=new THREE.Matrix4().set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1),look=new THREE.Vector3(),direction=new THREE.Vector3();
- const waterUniforms={time:{value:0},reflectionMap:{value:reflection.texture},textureMatrix:{value:textureMatrix},sunDirection:{value:new THREE.Vector3(-.45,.78,.43).normalize()},boatPosition:{value:new THREE.Vector2()},heading:{value:0},speed:{value:0},turbidity:{value:.25}};
+ const waterUniforms={time:{value:0},reflectionMap:{value:reflection.texture},textureMatrix:{value:textureMatrix},sunDirection:{value:new THREE.Vector3(-.45,.78,.43).normalize()},boatPosition:{value:new THREE.Vector2()},heading:{value:0},speed:{value:0},drive:{value:new THREE.Vector2()},turbidity:{value:.25}};
  const waterMat=new THREE.ShaderMaterial({uniforms:waterUniforms,vertexShader:`uniform float time;uniform mat4 textureMatrix;varying vec3 vWorld;varying vec4 vReflect;void main(){vec3 p=position;p.y+=sin(p.x*1.5+p.z*.63+time*.8)*.009+sin(p.z*2.7-p.x*.4-time*1.1)*.005;vec4 world=modelMatrix*vec4(p,1.);vWorld=world.xyz;vReflect=textureMatrix*world;gl_Position=projectionMatrix*viewMatrix*world;}`,fragmentShader:`
- uniform float time;uniform sampler2D reflectionMap;uniform vec3 sunDirection;uniform vec2 boatPosition;uniform float heading;uniform float speed;uniform float turbidity;varying vec3 vWorld;varying vec4 vReflect;
+ uniform float time;uniform sampler2D reflectionMap;uniform vec3 sunDirection;uniform vec2 boatPosition;uniform float heading;uniform float speed;uniform vec2 drive;uniform float turbidity;varying vec3 vWorld;varying vec4 vReflect;
  float rand(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(rand(i),rand(i+vec2(1.,0.)),f.x),mix(rand(i+vec2(0.,1.)),rand(i+1.),f.x),f.y);}
  float height(vec2 p){vec2 q=p+vec2(noise(p*.4+time*.03),noise(p*.35-time*.025))*1.3;return sin(q.x*1.6+q.y*.55+time*.8)*.017+sin(q.x*-2.1+q.y*1.75-time*.65)*.009+sin(q.x*5.15+q.y*3.8+time*1.4)*.0025+sin(q.x*10.2-q.y*6.1-time*1.7)*.0008;}
- void main(){vec2 p=vWorld.xz;float e=.016;float dx=(height(p+vec2(e,0))-height(p-vec2(e,0)))/(2.*e),dz=(height(p+vec2(0,e))-height(p-vec2(0,e)))/(2.*e);vec2 local=p-boatPosition;float along=-dot(local,vec2(sin(heading),-cos(heading))),across=dot(local,vec2(cos(heading),sin(heading)));float wake=sin(length(vec2(across,along*.65))*36.-time*6.)*.012*abs(speed)*exp(-abs(across)*2.-abs(along-1.)*.8)*smoothstep(0.,.5,along);vec3 n=normalize(vec3(-dx+ wake,1.,-dz+wake));vec3 eye=normalize(cameraPosition-vWorld);float fresnel=.035+.965*pow(1.-max(dot(n,eye),0.),5.);vec2 uv=vReflect.xy/vReflect.w+n.xz*.012;vec3 reflected=texture2D(reflectionMap,clamp(uv,.002,.998)).rgb;float ripple=height(p)*2.;vec3 base=mix(vec3(.040,.105,.079),vec3(.073,.107,.063),turbidity)+ripple;vec3 color=mix(base,reflected,clamp(.20+fresnel*.78,0.,.94));float highlight=pow(max(dot(reflect(-sunDirection,n),eye),0.),135.);color+=vec3(1.,.92,.7)*highlight*.75;float shadow=exp(-(local.x*local.x/1.1+local.y*local.y/1.8)*2.);color*=1.-shadow*.20;float bank=min(27.-abs(p.x),20.-abs(p.y));float edge=(1.-smoothstep(0.,.65,bank))*.13;color+=vec3(.18,.19,.12)*edge;gl_FragColor=vec4(color,1.);
+ float motorWake(vec2 p,float offset,float command){
+  float strength=abs(command),along=(p.y-.85)*sign(command),width=.14+max(along,0.)*.15;
+  float envelope=exp(-pow((p.x-offset)/width,2.)*1.8)*exp(-max(along,0.)*.85)*smoothstep(-.03,.18,along);
+  return sin(along*24.-time*(7.+strength*6.)+p.x*9.)*strength*envelope;
+ }
+ void main(){vec2 p=vWorld.xz;float e=.016;float dx=(height(p+vec2(e,0))-height(p-vec2(e,0)))/(2.*e),dz=(height(p+vec2(0,e))-height(p-vec2(0,e)))/(2.*e);vec2 local=p-boatPosition;float along=-dot(local,vec2(sin(heading),-cos(heading))),across=dot(local,vec2(cos(heading),sin(heading)));float leftWake=motorWake(vec2(across,along),-.71,drive.x),rightWake=motorWake(vec2(across,along),.71,drive.y);
+ float wake=(leftWake+rightWake)*.065;vec2 rippleGradient=vec2(cos(heading),sin(heading))*wake+vec2(-sin(heading),cos(heading))*wake*.65;
+ vec3 n=normalize(vec3(-dx+rippleGradient.x,1.,-dz+rippleGradient.y));vec3 eye=normalize(cameraPosition-vWorld);float fresnel=.035+.965*pow(1.-max(dot(n,eye),0.),5.);vec2 uv=vReflect.xy/vReflect.w+n.xz*.012;vec3 reflected=texture2D(reflectionMap,clamp(uv,.002,.998)).rgb;float ripple=height(p)*2.;vec3 base=mix(vec3(.040,.105,.079),vec3(.073,.107,.063),turbidity)+ripple;vec3 color=mix(base,reflected,clamp(.20+fresnel*.78,0.,.94));float highlight=pow(max(dot(reflect(-sunDirection,n),eye),0.),135.);color+=vec3(1.,.92,.7)*highlight*.75;float shadow=exp(-(local.x*local.x/1.1+local.y*local.y/1.8)*2.);color*=1.-shadow*.20;float bank=min(27.-abs(p.x),20.-abs(p.y));float edge=(1.-smoothstep(0.,.65,bank))*.13;color+=vec3(.18,.19,.12)*edge;gl_FragColor=vec4(color,1.);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
  }`});
  const waterGeo=new THREE.PlaneGeometry(54,40,96,72);waterGeo.rotateX(-Math.PI/2);const water=new THREE.Mesh(waterGeo,waterMat);scene.add(water);
  let reflectionFrame=0;
  const prepare=(camera,s,elapsed,boat)=>{
-  waterUniforms.time.value=elapsed;waterUniforms.boatPosition.value.set(s.x,s.z);waterUniforms.heading.value=s.heading;waterUniforms.speed.value=s.speed;waterUniforms.turbidity.value=s.turbidity;
+  waterUniforms.time.value=elapsed;waterUniforms.boatPosition.value.set(s.x,s.z);waterUniforms.heading.value=s.heading;waterUniforms.speed.value=s.speed;waterUniforms.drive.value.set(s.drive.left,s.drive.right);waterUniforms.turbidity.value=s.turbidity;
   buoys.forEach((o,i)=>{o.position.y=.035+Math.sin(elapsed*1.4+i)*.018;o.rotation.z=Math.sin(elapsed+i)*.025});
   if(reflectionFrame++%3!==0)return;
   camera.updateMatrixWorld();mirrorCamera.copy(camera);mirrorCamera.position.copy(camera.position);mirrorCamera.position.y=-camera.position.y;camera.getWorldDirection(direction);look.copy(camera.position).add(direction);look.y=-look.y;mirrorCamera.up.set(0,-1,0);mirrorCamera.lookAt(look);mirrorCamera.updateMatrixWorld();
