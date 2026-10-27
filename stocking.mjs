@@ -1,4 +1,4 @@
-import {clearReefFootprint} from './habitat.mjs?v=pigment-7';
+import {clearReefFootprint} from './habitat.mjs?v=shore-8';
 // Illustrative standing population, not a stocking instruction or survival model.
 export const SHRIMP_SCENARIO=Object.freeze({
  species:'日本对虾（车虾）',sampleWidth:20,sampleLength:14,

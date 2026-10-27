@@ -1,3 +1,4 @@
+import {BASE} from './navigation.mjs';
 import {mixDrive,jetPoint} from './propulsion.mjs';
 import {PROBE,obstacleBelow,cameraFrame,projectObservation,telescopicSections,cameraAvailable,canDrive,isGuardOccluded} from './probe.mjs';
 import {SHRIMP_SCENARIO,makeShrimpPopulation,shrimpPose} from './stocking.mjs';
@@ -14,7 +15,7 @@ test('emergency freezes all state and cancels route',()=>{const s=makeState();be
 test('unlock clears old task and depth target',()=>{const s=makeState();beginSurvey(s);s.keys.forward=true;emergencyStop(s);releaseStop(s);advance(s,1);assert.equal(s.mode,'manual');assert.equal(s.speed,0);assert.deepEqual(s.keys,{});assert.equal(s.targetDepth,s.depth)});
 test('manual takeover cancels automatic task',()=>{const s=makeState();beginSurvey(s);manual(s);assert.equal(s.route.length,0);assert.equal(s.mode,'manual')});
 test('survey stays inside bounds and completes',()=>{const s=makeState();beginSurvey(s);advance(s,250);assert.equal(s.mode,'manual');assert(s.records.length>0);assert(Math.abs(s.x)<=LIMITS.x&&Math.abs(s.z)<=LIMITS.z);assert(s.seen.size<=world.length)});
-test('return home completes without teleport',()=>{const s=makeState();s.x=4;s.z=-3;returnHome(s);assert.equal(s.x,4);advance(s,80);assert.equal(s.mode,'manual');assert(Math.hypot(s.x-HOME.x,s.z-HOME.z)<.6)});
+test('return home completes without teleport',()=>{const s=makeState();s.x=4;s.z=-3;returnHome(s);assert.equal(s.x,4);advance(s,80);assert.equal(s.mode,'manual');assert(Math.hypot(s.x-BASE.x,s.z-BASE.z)<.6)});
 test('boundary stops translation',()=>{const s=makeState();s.z=-6;s.heading=0;s.keys.forward=true;advance(s,15);assert(s.z>=-LIMITS.z+.9);assert.equal(s.speed,0)});
 test('simulated observations use known IDs, no count inflation',()=>{const s=makeState();for(let i=0;i<10;i++)capture(s,world);const count=s.seen.size;capture(s,world);assert.equal(s.seen.size,count);assert(s.records.every(r=>r.dataType==='SIMULATED_ONLY'))});
 test('poor visibility creates review flag without asserting targets',()=>{const s=makeState();s.turbidity=1;s.x=5;s.z=-2;const r=capture(s,world);assert(r.quality<60);assert.equal(s.seen.size,0);assert.equal(s.flags.length,1);capture(s,world);assert.equal(s.flags.length,1)});

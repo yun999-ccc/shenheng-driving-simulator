@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import * as THREE from './vendor/three.module.js';
+import {createRobot} from './robot.js?v=shore-8';
+import {createStation} from './station.js?v=shore-8';
+import {makeState} from './simulation.mjs?v=shore-8';
+// Canvas is stubbed solely for text surfaces. This does not render or validate appearance.
+globalThis.document={createElement:()=>({width:1,height:1,getContext:()=>({fillRect(){},fillText(){}})})};
+const scene=new THREE.Scene(),robot=createRobot(scene),station=createStation(scene),s=makeState();
+robot.update(s);station.update(s);scene.updateMatrixWorld(true);
+let triangles=0,meshes=0;
+scene.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry,p=g.attributes.position;for(const attribute of Object.values(g.attributes))assert([...attribute.array].every(Number.isFinite));g.computeBoundingBox();assert(!g.boundingBox.isEmpty());triangles+=(g.index?g.index.count:p.count)/3});
+const box=o=>new THREE.Box3().setFromObject(o),left=robot.boat.getObjectByName('Battery module left'),right=robot.boat.getObjectByName('Battery module right');
+const before=box(left);s.energy.hatch=1;robot.update(s);scene.updateMatrixWorld(true);
+assert(!box(robot.boat.getObjectByName('Battery lid left')).intersectsBox(box(left)));
+assert(!box(robot.boat.getObjectByName('Battery lid right')).intersectsBox(box(right)));
+s.energy.moduleLift=1;robot.update(s);scene.updateMatrixWorld(true);assert(Math.abs(box(left).min.y-before.min.y-.48)<1e-8);
+assert(!box(robot.boat.getObjectByName('Battery lid left')).intersectsBox(box(left)));
+assert(Math.abs(box(left).getSize(new THREE.Vector3()).x-box(right).getSize(new THREE.Vector3()).x)<1e-8);
+assert(station.root.position.z>20);assert(meshes<800);assert(triangles<180000);
+console.log(`${meshes} concept machine/station meshes, ${triangles} triangles; finite attributes, paired module dimensions and open-lid removal clearance verified. No browser render or real mechanical validation.`);

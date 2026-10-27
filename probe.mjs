@@ -1,4 +1,4 @@
-import {reefObstacleAt} from './habitat.mjs?v=pigment-7';
+import {reefObstacleAt} from './habitat.mjs?v=shore-8';
 // Illustrative geometry/interlocks; not certified hardware limits.
 export const PROBE=Object.freeze({mountOffset:.57,halfWidth:.35,halfLength:.29,bottomOffset:.22,clearance:.20,stowDepth:-.55,transitDepth:-.54,sleeveLength:1,mastTop:1.70,latchTime:.45,maxTilt:55,lensOffset:.10,verticalFov:65,far:10,waterDepth:2.5});
 export function probeCenter(s){return{x:s.x+PROBE.mountOffset*Math.sin(s.heading),z:s.z-PROBE.mountOffset*Math.cos(s.heading)}}
@@ -28,8 +28,8 @@ for(const y of [-.207,.107]){
  }
 }
 for(const x of [-.33,.33])for(const z of [-.27,.27])GUARD.push({a:[x,-.207,z],b:[x,.107,z],r:.013});
-export const cameraAvailable=s=>s.depth>=.3-1e-8&&!s.maintenance;
-export const canDrive=s=>s.liftPower!==false&&!s.maintenance&&(s.probeState==='ready'||s.probeState==='stowed'&&s.latch==='locked');
+export const cameraAvailable=s=>s.depth>=.3-1e-8&&!s.maintenance&&(!s.energy||(s.energy.powerOn&&s.energy.faults.link&&!s.energy.faults.leak&&s.energy.swapStage==='idle'));
+export const canDrive=s=>(!s.energy||(s.energy.powerOn&&s.energy.faults.link&&!s.energy.faults.leak&&s.energy.swapStage==='idle'&&(!s.energy.returnRequired||s.mode==='return')))&&s.liftPower!==false&&!s.maintenance&&(s.probeState==='ready'||s.probeState==='stowed'&&s.latch==='locked');
 export function isGuardOccluded(point,s){
  const f=cameraFrame(s),c=probeCenter(s),ch=Math.cos(s.heading),sh=Math.sin(s.heading);
  const local=p=>[(p.x-c.x)*ch+(p.z-c.z)*sh,p.y+s.depth,-(p.x-c.x)*sh+(p.z-c.z)*ch];

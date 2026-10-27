@@ -4,10 +4,15 @@
 
 [打开驾驶模拟台](https://yun999-ccc.github.io/shenheng-driving-simulator/)
 
-![实际界面](assets/preview.png)
+![历史版本实际界面，非v0.8画面](assets/preview.png)
+
+预览为历史实际截图。v0.8新增岸站与换电，尚未取得新的浏览器截图。
+
+[直接查看岸上补能站](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=shore-8&view=station) · [补能模型与参数边界](ENERGY-REVISION.md)
 
 ## 如何体验
 
+- 岸上太阳能充电、船载一组与岸上两组电池轮换；返岸、停机、开盖、取出、装入、关盖、检查、上电与模型联动，完成后可驶入样区。
 - 拖动查看三维样机，滚轮缩放，切换跟随、总览和近看视角。
 - W/A/S/D 或屏幕方向按钮驾驶；Q/E 或深度滑杆升降相机；前倾滑杆改变真实合成视场。
 - 点击“开始航线调查”执行预设均匀航线，可选择体验倍速。
@@ -25,15 +30,17 @@ python3 -m http.server 8080 --bind 127.0.0.1
 打开 http://127.0.0.1:8080/ 。不要直接双击 HTML 文件运行。Three.js 和表面纹理已随项目提供，运行时无需第三方 CDN、API 密钥或账号登录。
 
 ```sh
-node tests.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs
 ```
 
-状态模型包含52项检查，覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。这些检查不是实机性能验证。
+原状态模型包含52项检查，另有15项补能故障检查与独立几何检查；覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。这些检查不是实机性能验证。
 
 ## 文件结构
 
 - index.html / style.css：中文界面和响应式布局。
 - simulation.mjs：简化运动学、任务状态与模拟记录。
+- energy.mjs / navigation.mjs：模拟充放电、换电步骤、故障和返岸通道。
+- robot.js / station.js：船载电池机构与岸站概念几何。
 - scene.js：程序化样机、视角和下视画面。
 - environment.js：带反射与细波纹的池塘水面、坡岸、水闸和泥沙底质。
 - habitat.mjs：逐块参礁几何、合成视线三角面遮挡及保守净空包络。
@@ -54,7 +61,7 @@ GitHub Pages 从 main 分支根目录发布，.nojekyll 关闭 Jekyll 处理。�
 
 ## 参圈场景参考
 
-场景是参考沿海池塘养殖结构制作的合成环境，不是某个真实养殖场的测绘复刻。20×14米是可驾驶调查样区，不代表整个池塘面积。堤岸和换水设施围护池塘，浮标只标记调查区域，不表示防逃围网。
+场景是参考沿海池塘养殖结构制作的合成环境，不是某个真实养殖场的测绘复刻。20×14米是调查样区，另有通向岸站的可驾驶通道，不代表整个池塘面积。堤岸和换水设施围护池塘，浮标只标记调查区域，不表示防逃围网。
 
 - 大连海洋大学研究中的泥沙底、方砖垒礁和潮汐换水池塘：[原文](https://xuebao.dlou.edu.cn/article/2017/2095-1388/201706010.html)。
 - 多种海参养殖方式的说明：[原文](https://xuebao.dlou.edu.cn/article/2015/2095-1388/201502017.html)。
@@ -111,7 +118,7 @@ GitHub Pages 从 main 分支根目录发布，.nojekyll 关闭 Jekyll 处理。�
 渲染和合成遮挡使用同一批砖石三角面；探头保护读取同源砖块的保守外包络。88条海参分为礁外、洞口、礁内的合成测试位置，560尾虾仍保持固定模拟数量，运动避开礁体。具体完成范围及验证限制见 [REEF-REVISION.md](REEF-REVISION.md)。
 
 ```sh
-node tests.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs
 node tests-reef-geometry.mjs
 ```
 

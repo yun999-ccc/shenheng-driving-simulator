@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
-import {makeShrimpPopulation,shrimpPose} from './stocking.mjs?v=pigment-7';
-import {prawnGeometry} from './animal-geometry.js?v=pigment-7';
+import {makeShrimpPopulation,shrimpPose} from './stocking.mjs?v=shore-8';
+import {prawnGeometry} from './animal-geometry.js?v=shore-8';
 // Opaque PBR shell approximates a wet translucent-looking carapace; no costly screen refraction.
 export function createShrimp(parent){
  const population=makeShrimpPopulation(),group=new THREE.Group();parent.add(group);
