@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import * as THREE from './vendor/three.module.js';
-import {createRobot} from './robot.js?v=shore-8';
-import {createStation} from './station.js?v=shore-8';
-import {makeState} from './simulation.mjs?v=shore-8';
+import {createRobot} from './robot.js?v=cycle-9';
+import {createStation} from './station.js?v=cycle-9';
+import {makeState} from './simulation.mjs?v=cycle-9';
 // Canvas is stubbed solely for text surfaces. This does not render or validate appearance.
 globalThis.document={createElement:()=>({width:1,height:1,getContext:()=>({fillRect(){},fillText(){}})})};
 const scene=new THREE.Scene(),robot=createRobot(scene),station=createStation(scene),s=makeState();

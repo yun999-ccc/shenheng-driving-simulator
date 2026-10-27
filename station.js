@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {STATION} from './navigation.mjs?v=shore-8';
+import {STATION} from './navigation.mjs?v=cycle-9';
 // Authored concept geometry, dimensions do not select a photovoltaic product.
 export function createStation(parent){
  const root=new THREE.Group();root.name='Shore solar and spare battery station';root.position.set(STATION.x,STATION.y,STATION.z);parent.add(root);

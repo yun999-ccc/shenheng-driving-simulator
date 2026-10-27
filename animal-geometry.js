@@ -12,9 +12,9 @@ export function cucumberGeometry(detail='high'){
   positions.push(x,y,z);uv.push(i/nx,j/nr);
   // Explicit sRGB pigments: do not pass display-like HSL lightness into linear space.
   const mottling=.5+.25*Math.sin(x*135+a*7)+.17*Math.sin(x*323-a*13);
-  const base=new THREE.Color('#2d3020').lerp(new THREE.Color('#565038'),Math.max(0,Math.min(1,mottling)));
-  if(protrusion>.007)base.lerp(new THREE.Color('#756044'),Math.min(.22,protrusion*7));
-  if(c<-.4)base.lerp(new THREE.Color('#554b32'),.20);colors.push(base.r,base.g,base.b);
+  const base=new THREE.Color('#735f42').lerp(new THREE.Color('#a48c60'),Math.max(0,Math.min(1,mottling)));
+  if(protrusion>.007)base.lerp(new THREE.Color('#b09a70'),Math.min(.22,protrusion*7));
+  if(c<-.4)base.lerp(new THREE.Color('#8a7450'),.20);colors.push(base.r,base.g,base.b);
  }
  for(let i=0;i<nx;i++)for(let j=0;j<nr;j++){const a=i*(nr+1)+j,b=a+nr+1;indices.push(a,a+1,b,b,a+1,b+1)}
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();geo.computeBoundingSphere();return geo;

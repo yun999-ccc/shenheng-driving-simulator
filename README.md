@@ -6,12 +6,15 @@
 
 ![历史版本实际界面，非v0.8画面](assets/preview.png)
 
-预览为历史实际截图。v0.8新增岸站与换电，尚未取得新的浏览器截图。
+预览为历史实际截图。v0.8新增岸站与换电，v0.9新增一键完整流程并调整海参底色，尚未取得新的浏览器截图。
 
-[直接查看岸上补能站](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=shore-8&view=station) · [补能模型与参数边界](ENERGY-REVISION.md)
+[直接查看岸上补能站](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=cycle-9&view=station) · [补能模型与参数边界](ENERGY-REVISION.md)
+
+当前版：[一键巡检与补能](https://yun999-ccc.github.io/shenheng-driving-simulator/?v=cycle-9) · [本次修改与验证边界](CYCLE-REVISION.md)
 
 ## 如何体验
 
+- 点击“一键巡检与补能”，串起设备预检、沿线观察、回收返岸、人工换电自动演示、旧组回充与停泊待命；支持中断接管，故障解除不自行续跑。
 - 岸上太阳能充电、船载一组与岸上两组电池轮换；返岸、停机、开盖、取出、装入、关盖、检查、上电与模型联动，完成后可驶入样区。
 - 拖动查看三维样机，滚轮缩放，切换跟随、总览和近看视角。
 - W/A/S/D 或屏幕方向按钮驾驶；Q/E 或深度滑杆升降相机；前倾滑杆改变真实合成视场。
@@ -30,15 +33,16 @@ python3 -m http.server 8080 --bind 127.0.0.1
 打开 http://127.0.0.1:8080/ 。不要直接双击 HTML 文件运行。Three.js 和表面纹理已随项目提供，运行时无需第三方 CDN、API 密钥或账号登录。
 
 ```sh
-node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs
 ```
 
-原状态模型包含52项检查，另有15项补能故障检查与独立几何检查；覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。这些检查不是实机性能验证。
+原状态模型包含52项检查，另有15项补能故障、10项完整流程与独立几何检查；覆盖驾驶、升降、急停、接管、边界、航线完成、返航、合成观测关联和参礁遮挡。这些检查不是实机性能验证。
 
 ## 文件结构
 
 - index.html / style.css：中文界面和响应式布局。
 - simulation.mjs：简化运动学、任务状态与模拟记录。
+- mission.mjs：完整流程控制、模拟预检、航线与中断管理。
 - energy.mjs / navigation.mjs：模拟充放电、换电步骤、故障和返岸通道。
 - robot.js / station.js：船载电池机构与岸站概念几何。
 - scene.js：程序化样机、视角和下视画面。
@@ -118,7 +122,7 @@ GitHub Pages 从 main 分支根目录发布，.nojekyll 关闭 Jekyll 处理。�
 渲染和合成遮挡使用同一批砖石三角面；探头保护读取同源砖块的保守外包络。88条海参分为礁外、洞口、礁内的合成测试位置，560尾虾仍保持固定模拟数量，运动避开礁体。具体完成范围及验证限制见 [REEF-REVISION.md](REEF-REVISION.md)。
 
 ```sh
-node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs
+node --test tests.mjs tests-reef-geometry.mjs tests-animals.mjs tests-energy.mjs tests-machine-geometry.mjs tests-cycle.mjs
 node tests-reef-geometry.mjs
 ```
 

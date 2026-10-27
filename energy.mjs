@@ -1,4 +1,4 @@
-import {atBase,routeDistance,routeToBase} from './navigation.mjs?v=shore-8';
+import {atBase,routeDistance,routeToBase} from './navigation.mjs?v=cycle-9';
 // Explicit demonstration coefficients; no selected hardware or field measurements.
 export const ENERGY_DEMO=Object.freeze({capacityWh:800,pvWp:600,chargeEfficiency:.82,maxChargeW:500,idleW:18,computerW:25,lampsW:12,winchW:80,motorW:120,reserveFraction:.10,returnSpeed:.7,returnW:180});
 export function makeEnergy(){return{config:{...ENERGY_DEMO},onboard:'A',packs:{A:{wh:784,status:'onboard'},B:{wh:320,status:'charging'},C:{wh:800,status:'ready'}},charging:'B',ready:'C',powerOn:true,sun: .8,pvW:0,loadW:0,solarWh:0,consumedWh:0,curtailedWh:0,alarm:'',returnRequired:false,faults:{link:true,leak:false},hatch:0,moduleLift:0,swapStage:'idle',swapSeconds:0,pendingPack:null,events:[]}}
@@ -33,3 +33,5 @@ export function tickSwap(s,dt){const e=s.energy;if(!['opening','removing','inser
 export function fastCharge(s){const e=s.energy;if(e.powerOn||!canSwap(s)||!['idle','off','open','closed','checked'].includes(e.swapStage)){s.notice='请先返岸、收纳并停机，且等待换电机构停止后快进充电。';return false}tickShore(s,600);s.time+=600;logEnergy(s,'停机充电演示快进10分钟');s.notice='已快进10分钟停机充电；输入与电池存量按演示参数计算。';return true}
 export function setSun(s,value){const n=Number(value);if(Number.isFinite(n))s.energy.sun=Math.max(0,Math.min(1,n))}
 export function setEnergyFault(s,type,value){const e=s.energy;if(type==='link')e.faults.link=!!value;if(type==='leak')e.faults.leak=!!value;e.alarm=e.faults.leak?'舱内进水演练：停止推进，等待人工回收。':!e.faults.link?'通信中断演练：停驶并回收，等待恢复。':'';if(e.alarm){s.keys={};s.route=[];s.mode='manual';s.recording=false;s.speed=0;s.targetDepth=s.depth;s.targetTilt=s.tilt;if(['recovering','deploying'].includes(s.probeState))s.probeState='held';s.drive={left:0,right:0};s.driveCommand={left:0,right:0}}logEnergy(s,e.alarm||'故障解除；旧任务不自动恢复')}
+
+export function shorePower(s,on){if(!canSwap(s)||s.energy.swapStage!=='idle'||s.cycle.active)return false;s.energy.powerOn=!!on;s.energy.loadW=0;s.keys={};s.route=[];s.recording=false;s.mode='manual';s.notice=on?'岸边供电恢复，旧任务不会自动恢复。':'船载已停机，岸站继续模拟充电。';logEnergy(s,s.notice);return true}
