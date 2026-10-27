@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {makeShrimpPopulation,shrimpPose} from './stocking.mjs?v=thrusters-3';
+import {makeShrimpPopulation,shrimpPose} from './stocking.mjs?v=recovery-4';
 
 // Shared composite geometry keeps all 560 animals to one instanced draw call.
 // A 10cm stylized grow-out animal; it is not the trial's initial seed size.

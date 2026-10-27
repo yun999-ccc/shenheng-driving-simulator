@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="720" viewBox="0 0 1100 720">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8" fill="#416c56"/></marker><style>text{font-family:Arial,'PingFang SC','Microsoft YaHei',sans-serif;fill:#264b3b}.label{font-size:17px}.small{font-size:14px;fill:#657a69}.line{fill:none;stroke:#416c56;stroke-width:2}.rope{fill:none;stroke:#bd922e;stroke-width:3}.ghost{fill:none;stroke:#4e9777;stroke-width:2;stroke-dasharray:6 5}</style></defs>
+<rect width="1100" height="720" rx="20" fill="#f3f6ee"/><text x="40" y="52" font-size="27" font-weight="bold">离水回收机构 · 概念剖面与动作关系</text><text x="40" y="82" class="small">侧视示意，局部放大；不是加工图。尺寸来自网页几何，承载、倍率、密封与容差待验证。</text>
+<rect x="40" y="110" width="280" height="286" rx="12" fill="#fff" stroke="#d6e1d0"/>
+<text x="60" y="143" class="label" font-weight="bold">固定件与移动件</text>
+<text x="60" y="180" class="label">① 固定外套筒 + 后置支撑</text><text x="60" y="216" class="label">② 三段方形滑套，键向导向</text><text x="60" y="252" class="label">③ 主绳连接末级横头</text><text x="60" y="288" class="label">④ 制动单元与手摇接口</text><text x="60" y="324" class="label">⑤ 托座承接，锁销再接合</text><text x="60" y="365" class="small">级间等距运动为约束，非传动求解。</text>
+<rect x="40" y="465" width="280" height="170" rx="12" fill="#e7efe3"/>
+<text x="60" y="499" class="label" font-weight="bold">两种独立承载概念</text><text x="60" y="535" class="label">运行：主绳 / 导向机构</text><text x="60" y="568" class="label">收纳：承托座 / 机械锁销</text><text x="60" y="606" class="small">网页制动保持 ≠ 实物防坠通过。</text>
+<path d="M350 440H705" stroke="#80a8a0" stroke-width="2" stroke-dasharray="10 6"/><text x="610" y="432" class="small">静水面 y=0</text>
+<path d="M430 185H452V335H430Z" fill="#315c4c" stroke="#173d2c" stroke-width="2"/>
+<path d="M433 254H449V404H433Z" fill="#b2c1b2" stroke="#315c4c" stroke-width="2"/>
+<path d="M436 323H446V473H436Z" fill="#53745e" stroke="#315c4c" stroke-width="2"/>
+<path d="M439 392H443V542H439Z" fill="#b2c1b2" stroke="#315c4c" stroke-width="2"/>
+<path d="M442 250H520V419M520 419H590" fill="none" stroke="#7a8b7c" stroke-width="8"/>
+<rect x="525" y="385" width="66" height="43" rx="6" fill="#53745e"/><circle cx="558" cy="405" r="15" fill="#254937"/><rect x="591" y="390" width="25" height="30" rx="4" fill="#c4a653"/><path d="M616 405H635V383H650" class="line"/>
+<path d="M554 389L480 175L467 175V542H441" class="rope"/><circle cx="470" cy="183" r="12" fill="#e5e9d9" stroke="#a18741" stroke-width="4"/>
+<path d="M422 247V397M459 316V466M422 385V535" stroke="#bd922e" stroke-width="2" stroke-dasharray="5 4"/>
+<circle cx="422" cy="247" r="6" fill="#bd922e"/><circle cx="459" cy="316" r="6" fill="#bd922e"/><circle cx="422" cy="385" r="6" fill="#bd922e"/>
+<rect x="392" y="542" width="99" height="51" rx="7" fill="none" stroke="#6c8270" stroke-width="4"/>
+<rect x="428" y="550" width="26" height="22" rx="4" fill="#315c4c"/><path d="M441 572V579" stroke="#172e22" stroke-width="6"/><path d="M392 593H407M476 593H491" stroke="#315c4c" stroke-width="4"/>
+<rect x="392" y="340" width="99" height="51" rx="7" class="ghost"/><text x="348" y="326" class="small">离水收纳位置（虚线）</text>
+<rect x="385" y="393" width="22" height="7" fill="#54715b"/><rect x="476" y="393" width="22" height="7" fill="#54715b"/><path d="M382 360H401M482 360H504" stroke="#bd922e" stroke-width="5"/>
+<path d="M371 391V440" class="line" marker-start="url(#a)" marker-end="url(#a)"/><text x="331" y="418" class="small">0.33m</text>
+<path d="M649 185V440" class="line" marker-start="url(#a)" marker-end="url(#a)"/><text x="661" y="300" class="small">1.70m</text>
+<path d="M492 557H689" class="line"/><text x="510" y="583" class="small">示例：探头中心水下0.80m</text>
+<rect x="730" y="110" width="330" height="486" rx="12" fill="#fff" stroke="#d6e1d0"/>
+<text x="752" y="146" class="label" font-weight="bold">收纳顺序</text>
+<text x="752" y="187" class="label">停止推进 / 结束记录</text><path d="M780 202V226" class="line" marker-end="url(#a)"/>
+<text x="752" y="255" class="label">镜头归正，保留中央通道</text><path d="M780 270V294" class="line" marker-end="url(#a)"/>
+<text x="752" y="323" class="label">卷扬上收，框底离水</text><path d="M780 338V362" class="line" marker-end="url(#a)"/>
+<text x="752" y="391" class="label">进入托座，锁销接合</text><path d="M780 406V430" class="line" marker-end="url(#a)"/>
+<text x="752" y="459" class="label">允许返航 / 岸上维护示意</text>
+<text x="752" y="505" class="small">下放采用相反顺序：</text><text x="752" y="532" class="small">先退出锁销，再下放；入水后开放观测。</text><text x="752" y="568" class="small">失电演练仅切断卷扬，倾转独立供电。</text>
+<text x="40" y="676" class="small">待验证：主绳固定与滑轮倍率、级间同步、松绳 / 卡滞、制动与锁销载荷、移动线缆弯曲寿命及浮力稳性。</text>
+</svg>
