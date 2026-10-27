@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {REEFS} from './habitat.mjs?v=shrimp-1';
+import {REEFS} from './habitat.mjs?v=machine-2';
 
 const containerWidth=()=>document.documentElement.clientWidth;
 const hash=n=>{const v=Math.sin(n*127.1+34.3)*43758.5453;return v-Math.floor(v)};
