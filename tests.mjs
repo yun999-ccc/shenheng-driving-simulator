@@ -1,3 +1,4 @@
+import {SHRIMP_SCENARIO,makeShrimpPopulation,shrimpPose} from './stocking.mjs';
 import assert from 'node:assert/strict';
 import {makeState,makeWorld,tick,emergencyStop,releaseStop,beginSurvey,returnHome,manual,setDepth,capture,LIMITS,HOME,clearInput} from './simulation.mjs';
 import {REEFS,isReefOccluded} from './habitat.mjs';
@@ -16,4 +17,7 @@ test('boundary stops translation',()=>{const s=makeState();s.z=-6;s.heading=0;s.
 test('simulated observations use known IDs, no count inflation',()=>{const s=makeState();for(let i=0;i<10;i++)capture(s,world);const count=s.seen.size;capture(s,world);assert.equal(s.seen.size,count);assert(s.records.every(r=>r.dataType==='SIMULATED_ONLY'))});
 test('poor visibility creates review flag without asserting targets',()=>{const s=makeState();s.turbidity=1;s.x=5;s.z=-2;const r=capture(s,world);assert(r.quality<60);assert.equal(s.seen.size,0);assert.equal(s.flags.length,1);capture(s,world);assert.equal(s.flags.length,1)});
 test('reef roof blocks synthetic observation and count',()=>{const s=makeState(),r=REEFS[0];s.x=r.x;s.z=r.z+.57;const target={id:999,x:r.x,z:r.z};assert(isReefOccluded(target,{x:r.x,z:r.z},1.6));const observation=capture(s,[target]);assert.equal(observation.visible.length,0);assert.equal(s.seen.size,0);assert(!isReefOccluded({x:20,z:20},{x:20,z:20},1.6))});
-console.log(`${passed}/13 state-model checks passed; not a field or hydrodynamic validation.`);
+test('shrimp count matches scenario area and density',()=>{const p=makeShrimpPopulation();assert.equal(p.length,SHRIMP_SCENARIO.sampleWidth*SHRIMP_SCENARIO.sampleLength*SHRIMP_SCENARIO.referenceDensity);assert.equal(new Set(p.map(x=>x.id)).size,560);assert.deepEqual(p,makeShrimpPopulation())});
+test('shrimp motion remains inside sample and resets deterministically',()=>{const p=makeShrimpPopulation();for(const t of [0,30,600,3600])for(const o of p){const q=shrimpPose(o,t);assert(Math.abs(q.x)<10&&Math.abs(q.z)<7);assert(q.y>-2.5&&q.y<-2.3)}assert.deepEqual(shrimpPose(p[0],0),shrimpPose(p[0],0))});
+test('shrimp do not inflate sea cucumber records',()=>{const s=makeState();const c={x:s.x,z:s.z-.57};const fake=[{id:'shrimp-test',species:'shrimp',...c},{id:42,species:'sea-cucumber',...c}];capture(s,fake);assert.equal(s.seen.size,1);assert(s.seen.has(42));assert.equal(s.records[0].visibleTargets,1)});
+console.log(`${passed}/16 state-model checks passed; not a field or hydrodynamic validation.`);
